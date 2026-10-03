@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📋 Project Management System
 
-## Getting Started
+Sistem Manajemen Proyek & Tugas dengan model akses kontrol 3 dimensi (Role + Department + Task Status).
 
-First, run the development server:
+## 🏗 Arsitektur
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+Project Management System/
+├── backend/             # Bun + Hono + Prisma + PostgreSQL
+│   ├── prisma/          # Schema + Seed
+│   └── src/
+│       ├── config/      # Environment, Constants
+│       ├── lib/         # Prisma Client, JWT
+│       ├── middlewares/  # Auth, Role, Error
+│       ├── modules/
+│       │   ├── auth/          # Login, Register, Me
+│       │   ├── departments/   # CRUD Department
+│       │   ├── projects/      # CRUD + Members
+│       │   ├── tasks/         # CRUD + Status + Dependencies + Audit
+│       │   ├── users/         # User Management
+│       │   ├── attachments/   # File Attachments
+│       │   └── client/        # Client-safe endpoints
+│       ├── shared/      # Response, Errors, Types, Utils
+│       └── routes/      # Route aggregator
+├── frontend/            # Next.js 16 + TypeScript + Tailwind
+│   └── src/
+│       ├── app/
+│       │   ├── login/           # Login page
+│       │   ├── (dashboard)/     # Internal pages (PM + INTERNAL)
+│       │   │   ├── dashboard/   # Dashboard overview
+│       │   │   ├── projects/    # Project list & detail
+│       │   │   ├── tasks/       # Kanban board & detail
+│       │   │   ├── users/       # User management
+│       │   │   └── departments/ # Department management
+│       │   └── client/          # Client portal
+│       ├── components/  # Sidebar, etc.
+│       ├── lib/         # API Client
+│       ├── providers/   # Auth Context
+│       └── types/       # TypeScript types
+└── docker-compose.yml   # PostgreSQL
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Model Access Control 3 Dimensi
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Dimensi | Pertanyaan | Contoh |
+|---------|-----------|--------|
+| **Role** | Siapa mereka? | PM, INTERNAL, CLIENT |
+| **Department** | Dari tim mana? | UI/UX, Frontend, Backend |
+| **Task Status** | Apa status tugas? | TODO, IN_PROGRESS, DONE, BLOCKED |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Quick Start
 
-## Learn More
+### Prerequisites
+- Node.js 18+
+- PostgreSQL (via Docker atau langsung)
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Database
+```bash
+docker-compose up -d
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. Backend
+```bash
+cd backend
+cp .env.example .env
+bun install
+bun run db:push
+bun run db:seed
+bun run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Frontend
+```bash
+cd frontend
+npm install
+npm run dev -- --port 3001
+```
 
-## Deploy on Vercel
+### 4. Buka Aplikasi
+- Frontend: http://localhost:3001
+- Backend API: http://localhost:3000/api/v1
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 👤 Login Credentials (Demo)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Role | Email | Password |
+|------|-------|----------|
+| PM | pm@assessment.test | Password123! |
+| UI/UX (Internal) | uiux@assessment.test | Password123! |
+| Frontend (Internal) | frontend@assessment.test | Password123! |
+| Backend (Internal) | backend@assessment.test | Password123! |
+| Client | client@assessment.test | Password123! |
+
+## 📡 API Endpoints
+
+### Auth
+- `POST /auth/login` — Login
+- `POST /auth/register` — Register
+- `GET /auth/me` — Current user profile
+
+### Departments
+- `GET /departments` — List all
+- `POST /departments` — Create (PM only)
+
+### Projects
+- `GET /projects` — List (role-scoped)
+- `POST /projects` — Create (PM only)
+- `POST /projects/:id/members` — Add member (PM only)
+
+### Tasks
+- `GET /tasks` — List with filters
+- `POST /tasks` — Create (PM only)
+- `PATCH /tasks/:id/status` — Update status (3-dim check)
+- `POST /tasks/:id/dependencies` — Add dependency (PM only)
+- `GET /tasks/:id/audit-logs` — Audit trail (PM only)
+
+### Client
+- `GET /client/projects` — Client projects (masked data)
+- `GET /client/projects/:id/tasks` — Visible tasks only

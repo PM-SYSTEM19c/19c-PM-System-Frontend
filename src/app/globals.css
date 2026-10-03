@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens (shadcn/ui naming) — dark premium theme.
+ * Exposed to Tailwind CSS 4 via @theme inline, e.g. bg-card, text-muted-foreground,
+ * border-border, bg-primary, text-status-done, etc.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --background: #070607;
+  --background-2: #13141a;
+  --foreground: #eaeaff;
+  --card: #15151e;
+  --card-hover: #1e1e28;
+  --card-foreground: #eaeaff;
+  --popover: #15151e;
+  --popover-foreground: #eaeaff;
+  --primary: #50b1d2;
+  --primary-2: #094c86;
+  --primary-foreground: #070607;
+  --secondary: #1e1e28;
+  --secondary-foreground: #eaeaff;
+  --muted: #1e1e28;
+  --muted-foreground: #a3a0af;
+  --subtle: #7a7785;
+  --accent: #1e1e28;
+  --accent-foreground: #eaeaff;
+  --destructive: #ff5b5b;
+  --success: #25d366;
+  --warning: #f59e0b;
+  --info: #50b1d2;
+  --border: #292938;
+  --input: #292938;
+  --ring: #50b1d2;
+  --radius: 0.75rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Task status colors */
+  --color-status-todo: var(--info);
+  --color-status-in_progress: var(--warning);
+  --color-status-done: var(--success);
+  --color-status-blocked: var(--destructive);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-fade-in: fade-in 0.3s ease forwards;
+  --animate-slide-in: slide-in 0.3s ease forwards;
+  --animate-shimmer: shimmer 1.5s infinite linear;
+  --animate-dialog-in: dialog-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-overlay-in: fade-in 0.15s ease;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -48%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  option {
+    background-color: var(--background-2);
+    color: var(--foreground);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background-2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--subtle);
 }

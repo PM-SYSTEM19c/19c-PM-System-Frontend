@@ -27,13 +27,24 @@ export interface Department {
   description?: string | null;
 }
 
+export interface Position {
+  id: string;
+  name: string;
+  description?: string | null;
+}
+
+export type UserStatus = "PENDING" | "ACTIVE" | "REJECTED";
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
+  status?: UserStatus;
   departmentId: string | null;
   department: Department | null;
+  positionId?: string | null;
+  position?: Position | null;
   createdAt?: string;
 }
 
@@ -53,6 +64,8 @@ export interface Project {
   taskStats: { total: number; done: number };
   _count?: { tasks: number; members: number };
   members?: Array<{ user: User; createdAt: string }>;
+  client?: { id: string; name: string; email?: string } | null;
+  departments?: Array<{ department: Department & { users?: User[] } }>;
 }
 
 export interface TaskDependency {
@@ -80,7 +93,12 @@ export interface Task {
   updatedAt: string;
   project: { id: string; name: string };
   department: Department;
-  assignee: { id: string; name: string; email: string } | null;
+  assignee: {
+    id: string;
+    name: string;
+    email: string;
+    position?: Position | null;
+  } | null;
   dependencies: TaskDependency[];
   dependents?: Array<{ task: { id: string; title: string; status: string } }>;
   dependencyStatus?: {
@@ -89,6 +107,45 @@ export interface Task {
     pendingDependencies: Array<{ id: string; title: string; status: string }>;
   };
   _count?: { attachments: number; auditLogs: number };
+  /** Prerequisites still not DONE (only populated when effectiveStatus is BLOCKED) */
+  blockedBy?: BlockingTask[];
+  /** Present on PATCH /tasks/:id responses */
+  concurrency?: {
+    merged: boolean;
+    baseVersion: number;
+    appliedFields: string[];
+  };
+}
+
+export interface BlockingTask {
+  id: string;
+  title: string;
+  status: TaskStatus;
+}
+
+export type EditableTaskField =
+  | "title"
+  | "description"
+  | "departmentId"
+  | "assigneeId"
+  | "clientVisible";
+
+/** `error.details` of a 409 VERSION_CONFLICT response */
+export interface VersionConflictDetails {
+  currentVersion: number;
+  conflictingFields?: Array<EditableTaskField | "status">;
+  current?: Pick<
+    Task,
+    | "id"
+    | "title"
+    | "description"
+    | "status"
+    | "departmentId"
+    | "assigneeId"
+    | "clientVisible"
+    | "version"
+    | "updatedAt"
+  >;
 }
 
 export interface TaskAttachment {
