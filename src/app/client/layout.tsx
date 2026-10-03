@@ -31,7 +31,7 @@ export default function ClientLayout({
   return (
     <div>
       {/* Client Header */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background-2/90 px-10 py-4 backdrop-blur-md">
+      <header className="sticky top-0 z-40 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-border bg-background-2/90 px-4 md:px-10 py-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary-2">
             <ClipboardList className="size-5 text-white" />
@@ -42,15 +42,15 @@ export default function ClientLayout({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground">
-            <UserIcon className="size-4" /> {user.name}
+          <span className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground truncate max-w-[150px] md:max-w-none">
+            <UserIcon className="size-4 shrink-0" /> {user.name}
           </span>
           <Button size="sm" variant="secondary" onClick={logout}>
-            <LogOut /> Logout
+            <LogOut className="size-4 md:mr-2" /> <span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-[1200px] px-10 py-8">{children}</main>
+      <main className="mx-auto max-w-[1200px] px-4 md:px-10 py-6 md:py-8 overflow-x-hidden">{children}</main>
     </div>
   );
 }

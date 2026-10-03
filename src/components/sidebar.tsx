@@ -54,7 +54,7 @@ const NAV_ITEMS = [
   { label: "Trash", href: "/trash", icon: Trash2, roles: ["PM"] },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -108,6 +108,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onNavClick}
                 className={cn(
                   "flex items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-card hover:text-foreground",
                   isActive &&
@@ -125,7 +126,10 @@ export function Sidebar() {
       {/* Logout */}
       <button
         type="button"
-        onClick={logout}
+        onClick={() => {
+          logout();
+          if (onNavClick) onNavClick();
+        }}
         className="mt-auto flex w-full items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
       >
         <LogOut className="size-[18px]" />
