@@ -46,11 +46,14 @@ export default function ClientLayout({
             <UserIcon className="size-4 shrink-0" /> {user.name}
           </span>
           <Button size="sm" variant="secondary" onClick={logout}>
-            <LogOut className="size-4 md:mr-2" /> <span className="hidden md:inline">Logout</span>
+            <LogOut className="size-4 md:mr-2" />{" "}
+            <span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-[1200px] px-4 md:px-10 py-6 md:py-8 overflow-x-hidden">{children}</main>
+      <main className="mx-auto max-w-[1200px] px-4 md:px-10 py-6 md:py-8 overflow-x-hidden">
+        {children}
+      </main>
     </div>
   );
 }
