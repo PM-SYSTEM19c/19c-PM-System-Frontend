@@ -407,7 +407,8 @@ export default function ProjectDetailPage() {
               onClick={handleDeleteProject}
               disabled={deleteProjectMutation.isPending}
             >
-              <Trash2 /> {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
+              <Trash2 />{" "}
+              {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </div>
         )}
