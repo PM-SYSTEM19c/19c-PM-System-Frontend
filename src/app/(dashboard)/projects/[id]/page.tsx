@@ -68,7 +68,7 @@ const KANBAN_COLUMNS = [
     icon: Ban,
     text: "text-destructive",
     border: "border-b-destructive",
-    chip: "bg-destructive/15 text-destructive",
+    chip: "border border-destructive/30 bg-destructive/15 text-destructive",
   },
   {
     key: "TODO",
@@ -76,7 +76,7 @@ const KANBAN_COLUMNS = [
     icon: ListTodo,
     text: "text-info",
     border: "border-b-info",
-    chip: "bg-info/15 text-info",
+    chip: "border border-info/30 bg-info/15 text-info",
   },
   {
     key: "IN_PROGRESS",
@@ -84,20 +84,20 @@ const KANBAN_COLUMNS = [
     icon: Zap,
     text: "text-warning",
     border: "border-b-warning",
-    chip: "bg-warning/15 text-warning",
+    chip: "border border-warning/30 bg-warning/15 text-warning",
   },
   {
     key: "DONE",
     label: "Done",
     icon: CheckCircle2,
-    text: "text-success",
-    border: "border-b-success",
-    chip: "bg-success/15 text-success",
+    text: "text-primary",
+    border: "border-b-primary",
+    chip: "border border-primary/30 bg-primary/15 text-primary",
   },
 ] as const;
 
 const quickBtn =
-  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold transition-colors [&_svg]:size-3";
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition-all duration-150 [&_svg]:size-3 active:scale-95";
 
 const editProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -326,170 +326,239 @@ export default function ProjectDetailPage() {
     editForm.formState.isSubmitting || updateProjectMutation.isPending;
 
   return (
-    <div className="animate-fade-in">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Back
-      </button>
+    <div className="animate-fade-in space-y-6">
+      {/* Project Header */}
+      <div className="rounded-2xl border border-border bg-card p-6 md:p-7 shadow-xs">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          {/* Left Column: Project Identity & Scope */}
+          <div className="min-w-0 flex-1 space-y-4">
+            {/* Back button & Active badge */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface-2/60 px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              >
+                <ArrowLeft className="size-3.5" /> Back to Projects
+              </button>
+            </div>
 
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {editing ? (
-            <form
-              onSubmit={editForm.handleSubmit(onSaveEdit)}
-              className="mb-2 max-w-2xl space-y-3"
-            >
-              <Input
-                {...editForm.register("name")}
-                className="h-12 text-2xl font-extrabold"
-              />
-              <FieldError message={editForm.formState.errors.name?.message} />
-              <Textarea
-                {...editForm.register("description")}
-                placeholder="Project description..."
-                rows={2}
-              />
-              <NativeSelect {...editForm.register("clientId")}>
-                <option value="">No Client (Internal Project)</option>
-                {allClients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.email})
-                  </option>
-                ))}
-              </NativeSelect>
-              <div className="flex gap-2">
-                <Button type="submit" size="sm" disabled={savingEdit}>
-                  {savingEdit ? "Saving..." : "Save"}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <h1 className="mb-2 text-[28px] font-extrabold">
-                {project.name}
-              </h1>
-              {project.client && (
-                <Badge variant="teal" className="mb-2 text-xs">
-                  Client: {project.client.name}{" "}
-                  {project.client.email && `(${project.client.email})`}
-                </Badge>
-              )}
-              {project.description && (
-                <p className="max-w-[600px] text-sm leading-relaxed text-muted-foreground">
-                  {project.description}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-        {user?.role === "PM" && !editing && (
-          <div className="flex shrink-0 gap-2">
-            <Button variant="secondary" size="sm" onClick={startEditing}>
-              <Pencil /> Edit
-            </Button>
-            <Button
-              id="delete-project-btn"
-              variant="secondary"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10"
-              onClick={handleDeleteProject}
-              disabled={deleteProjectMutation.isPending}
-            >
-              <Trash2 />{" "}
-              {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Progress */}
-      <Card className="mb-6 p-6">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-base font-bold">Progress</span>
-          <span className="text-2xl font-extrabold text-primary">
-            {project.progress}%
-          </span>
-        </div>
-        <Progress value={project.progress} className="mb-4 h-3" />
-        <div className="flex flex-wrap gap-6 text-[13px]">
-          <span className="inline-flex items-center gap-1.5 text-info">
-            <ListTodo className="size-4" /> {stats.todo} TODO
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-warning">
-            <Zap className="size-4" /> {stats.inProgress} In Progress
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-success">
-            <CheckCircle2 className="size-4" /> {stats.done} Done
-          </span>
-          {stats.blocked > 0 && (
-            <span className="inline-flex items-center gap-1.5 text-destructive">
-              <Ban className="size-4" /> {stats.blocked} Blocked
-            </span>
-          )}
-        </div>
-      </Card>
-
-      {/* Departments */}
-      <Card className="mb-6 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-muted-foreground">
-            Assigned Departments ({project.departments?.length || 0})
-          </h3>
-          {user?.role === "PM" && (
-            <Button size="sm" onClick={() => setShowAddDepartment(true)}>
-              <Plus /> Add Department
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {project.departments?.map((d) => (
-            <div
-              key={d.department.id}
-              className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3.5 py-2 transition-all"
-            >
-              <span className="flex size-8 items-center justify-center rounded-full bg-[#00cec9]/20">
-                <Building2 className="size-4 text-[#00cec9]" />
-              </span>
+            {editing ? (
+              <form
+                onSubmit={editForm.handleSubmit(onSaveEdit)}
+                className="max-w-2xl space-y-3 rounded-2xl border border-border/70 bg-background/60 p-4"
+              >
+                <div>
+                  <Label htmlFor="proj-name">Project Name *</Label>
+                  <Input
+                    id="proj-name"
+                    {...editForm.register("name")}
+                    className="h-11 text-xl font-extrabold"
+                  />
+                  <FieldError
+                    message={editForm.formState.errors.name?.message}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="proj-desc">Description</Label>
+                  <Textarea
+                    id="proj-desc"
+                    {...editForm.register("description")}
+                    placeholder="Project description..."
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="proj-client">Client</Label>
+                  <NativeSelect
+                    id="proj-client"
+                    {...editForm.register("clientId")}
+                  >
+                    <option value="">No Client (Internal Project)</option>
+                    {allClients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.email})
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button type="submit" size="sm" disabled={savingEdit}>
+                    {savingEdit ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
               <div>
-                <div className="text-[13px] font-semibold">
-                  {d.department.name}
+                <div className="mb-2 flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-2xl font-extrabold tracking-tight text-foreground lg:text-3xl">
+                    {project.name}
+                  </h1>
+                  {project.client ? (
+                    <Badge variant="teal" className="text-xs">
+                      Client: {project.client.name}{" "}
+                      {project.client.email && `(${project.client.email})`}
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="text-xs text-muted-foreground font-mono"
+                    >
+                      Internal Project
+                    </Badge>
+                  )}
                 </div>
-                <div className="text-[11px] text-subtle">
-                  {d.department.users?.length || 0} members
+                {project.description && (
+                  <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground lg:text-sm">
+                    {project.description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Assigned Departments Cluster */}
+            <div className="border-t border-border/50 pt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="mr-1 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Building2 className="size-3.5 text-primary" />
+                  <span>Departments ({project.departments?.length || 0}):</span>
+                </div>
+                {project.departments?.map((d) => (
+                  <div
+                    key={d.department.id}
+                    className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-surface-2/60 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-all hover:border-border"
+                  >
+                    <span className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+                      {d.department.name.substring(0, 2).toUpperCase()}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {d.department.name}
+                    </span>
+                    <span className="text-[10px] font-mono text-subtle">
+                      ({d.department.users?.length || 0})
+                    </span>
+                    {user?.role === "PM" && (
+                      <button
+                        type="button"
+                        onClick={() => removeDepartment(d.department.id)}
+                        disabled={removingDepartment === d.department.id}
+                        className="ml-0.5 rounded p-0.5 text-subtle transition-colors hover:bg-destructive/20 hover:text-destructive"
+                        title="Remove department"
+                      >
+                        {removingDepartment === d.department.id ? (
+                          "..."
+                        ) : (
+                          <X className="size-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {user?.role === "PM" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddDepartment(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-all hover:border-primary hover:bg-primary/10"
+                  >
+                    <Plus className="size-3" /> Add Department
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Execution Telemetry & Action Deck */}
+          <div className="flex w-full shrink-0 flex-col gap-4 rounded-2xl border border-border/70 bg-surface-1/90 p-5 shadow-inner backdrop-blur-md lg:w-80">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                  Delivery Velocity
+                </div>
+                <div className="font-mono text-3xl font-extrabold tracking-tight text-primary">
+                  {project.progress}%
                 </div>
               </div>
-              {/* Remove button — PM only */}
-              {user?.role === "PM" && (
-                <button
-                  type="button"
-                  onClick={() => removeDepartment(d.department.id)}
-                  disabled={removingDepartment === d.department.id}
-                  className="ml-1 px-1 text-subtle transition-colors hover:text-destructive"
-                  title="Remove department"
-                >
-                  {removingDepartment === d.department.id ? (
-                    "..."
-                  ) : (
-                    <X className="size-4" />
-                  )}
-                </button>
+              {user?.role === "PM" && !editing && (
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={startEditing}
+                    className="h-8 gap-1 px-2.5 text-xs font-semibold"
+                  >
+                    <Pencil className="size-3" /> Edit
+                  </Button>
+                  <Button
+                    id="delete-project-btn"
+                    variant="secondary"
+                    size="sm"
+                    className="h-8 gap-1 px-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                    onClick={handleDeleteProject}
+                    disabled={deleteProjectMutation.isPending}
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
               )}
             </div>
-          ))}
+
+            {/* Segmented Progress Visual */}
+            <div className="h-2 w-full overflow-hidden rounded-full bg-surface-3">
+              <div
+                style={{ width: `${project.progress || 0}%` }}
+                className="h-full bg-primary transition-all duration-300"
+              />
+            </div>
+
+            {/* Status Breakdown Grid */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between rounded-xl border border-info/20 bg-info/5 px-2.5 py-1.5 text-info">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold">
+                  <ListTodo className="size-3.5" /> TODO
+                </span>
+                <span className="font-mono font-extrabold">{stats.todo}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-warning/20 bg-warning/5 px-2.5 py-1.5 text-warning">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold">
+                  <Zap className="size-3.5" /> Active
+                </span>
+                <span className="font-mono font-extrabold">
+                  {stats.inProgress}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-success/20 bg-success/5 px-2.5 py-1.5 text-success">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold">
+                  <CheckCircle2 className="size-3.5" /> Done
+                </span>
+                <span className="font-mono font-extrabold">{stats.done}</span>
+              </div>
+              <div
+                className={cn(
+                  "flex items-center justify-between rounded-xl border px-2.5 py-1.5",
+                  stats.blocked > 0
+                    ? "border-destructive/30 bg-destructive/10 text-destructive font-bold"
+                    : "border-border/50 bg-surface-2/30 text-subtle font-medium",
+                )}
+              >
+                <span className="flex items-center gap-1.5 text-[11px] font-bold">
+                  <Ban className="size-3.5" /> Blocked
+                </span>
+                <span className="font-mono font-extrabold">
+                  {stats.blocked}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
+      </div>
 
       {/* Add Department Dialog */}
       <Dialog open={showAddDepartment} onOpenChange={setShowAddDepartment}>
@@ -694,14 +763,14 @@ export default function ProjectDetailPage() {
                 <Plus /> Create Task
               </Button>
             )}
-            <div className="flex rounded-lg border border-border bg-background-2 p-0.5">
+            <div className="flex rounded-full border border-border/80 bg-background-2/80 p-0.5">
               <button
                 type="button"
                 onClick={() => setTaskView("kanban")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition",
+                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-200",
                   taskView === "kanban"
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground font-bold shadow-xs"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -711,9 +780,9 @@ export default function ProjectDetailPage() {
                 type="button"
                 onClick={() => setTaskView("list")}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition",
+                  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-150",
                   taskView === "list"
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground font-bold shadow-xs"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -735,39 +804,41 @@ export default function ProjectDetailPage() {
           />
         ) : taskView === "kanban" ? (
           /* Kanban View */
-          <div className="flex gap-3.5 overflow-x-auto pb-2">
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {KANBAN_COLUMNS.map((col) => {
               const colTasks = grouped[col.key] || [];
               const Icon = col.icon;
               return (
                 <div
                   key={col.key}
-                  className="min-h-[400px] min-w-[240px] flex-1 rounded-2xl border border-border bg-background-2"
+                  className="min-h-[420px] min-w-[260px] flex-1 rounded-2xl border border-border bg-card/60 backdrop-blur-xs"
                 >
                   <div
                     className={cn(
-                      "flex items-center justify-between border-b-2 px-4 py-3.5",
+                      "flex items-center justify-between border-b px-4 py-3.5",
                       col.border,
                     )}
                   >
                     <div className="flex items-center gap-1.5">
                       <Icon className={cn("size-4", col.text)} />
-                      <span className="text-[13px] font-bold">{col.label}</span>
+                      <span className="text-[13px] font-bold text-foreground">
+                        {col.label}
+                      </span>
                     </div>
                     <span
                       className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] font-bold",
+                        "rounded-full px-2 py-0.5 text-[11px] font-mono font-bold",
                         col.chip,
                       )}
                     >
                       {colTasks.length}
                     </span>
                   </div>
-                  <div className="py-1.5">
+                  <div className="py-2">
                     {colTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="mx-3 my-2 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-black/30"
+                        className="mx-3 my-2.5 rounded-2xl border border-border bg-card p-4 transition-all duration-150 hover:border-zinc-400 dark:hover:border-zinc-700 hover:shadow-xs"
                       >
                         <Link
                           href={`/tasks/${task.id}`}

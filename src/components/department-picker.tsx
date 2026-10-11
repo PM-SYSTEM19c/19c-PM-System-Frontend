@@ -79,25 +79,27 @@ export function DepartmentPicker({
                 key={d.id}
                 onClick={() => onToggle(d.id)}
                 className={cn(
-                  "flex w-full items-center justify-between border-b border-border px-3.5 py-2.5 text-left transition-colors last:border-b-0",
-                  isSelected ? "bg-primary/10" : "hover:bg-card",
+                  "flex w-full items-center justify-between border-b border-border/80 px-3.5 py-2.5 text-left transition-colors last:border-b-0",
+                  isSelected
+                    ? "bg-primary/10 text-primary"
+                    : "hover:bg-card text-foreground",
                 )}
               >
                 <span className="flex items-center gap-2.5">
-                  <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/25">
                     <Building2 className="size-3.5 text-primary" />
                   </span>
-                  <span className="text-[13px] font-medium">{d.name}</span>
+                  <span className="text-[13px] font-semibold">{d.name}</span>
                 </span>
                 <span
                   className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded",
+                    "flex size-5 shrink-0 items-center justify-center rounded-md transition-all",
                     isSelected
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-primary-foreground font-bold shadow-xs"
                       : "border-2 border-border",
                   )}
                 >
-                  {isSelected && <Check className="size-3" />}
+                  {isSelected && <Check className="size-3.5 stroke-[3]" />}
                 </span>
               </button>
             );

@@ -5,6 +5,8 @@ import {
   Briefcase,
   Building2,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FolderKanban,
   LayoutDashboard,
@@ -14,49 +16,71 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 
-const NAV_ITEMS = [
+const NAV_GROUPS = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    roles: ["PM", "INTERNAL"],
+    title: "WORKSPACE",
+    items: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: LayoutDashboard,
+        roles: ["PM", "INTERNAL"],
+      },
+      {
+        label: "Projects",
+        href: "/projects",
+        icon: FolderKanban,
+        roles: ["PM", "INTERNAL"],
+      },
+      {
+        label: "Your Tasks",
+        href: "/tasks",
+        icon: CheckSquare,
+        roles: ["INTERNAL"],
+      },
+    ],
   },
   {
-    label: "Projects",
-    href: "/projects",
-    icon: FolderKanban,
-    roles: ["PM", "INTERNAL"],
+    title: "ORGANIZATION",
+    items: [
+      { label: "Users", href: "/users", icon: Users, roles: ["PM"] },
+      {
+        label: "Departments",
+        href: "/departments",
+        icon: Building2,
+        roles: ["PM"],
+      },
+      {
+        label: "Positions",
+        href: "/positions",
+        icon: Briefcase,
+        roles: ["PM"],
+      },
+    ],
   },
   {
-    label: "Your Tasks",
-    href: "/tasks",
-    icon: CheckSquare,
-    roles: ["INTERNAL"],
+    title: "AUDIT & ARCHIVE",
+    items: [
+      {
+        label: "Recent Activity",
+        href: "/activity",
+        icon: Activity,
+        roles: ["PM"],
+      },
+      { label: "Trash", href: "/trash", icon: Trash2, roles: ["PM"] },
+    ],
   },
-  {
-    label: "Recent Activity",
-    href: "/activity",
-    icon: Activity,
-    roles: ["PM"],
-  },
-  { label: "Users", href: "/users", icon: Users, roles: ["PM"] },
-  {
-    label: "Departments",
-    href: "/departments",
-    icon: Building2,
-    roles: ["PM"],
-  },
-  { label: "Positions", href: "/positions", icon: Briefcase, roles: ["PM"] },
-  { label: "Trash", href: "/trash", icon: Trash2, roles: ["PM"] },
 ];
 
 export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
 
   if (!user) return null;
 
@@ -67,74 +91,154 @@ export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
         ? "teal"
         : "secondary";
 
-  return (
-    <aside className="fixed top-0 left-0 z-40 flex h-screen w-[260px] flex-col border-r border-border bg-background-2 px-4 py-6">
-      {/* Brand */}
-      <div className="mb-8 flex items-center gap-3 px-1">
-        <div className="flex size-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_35%,transparent)]">
-          <ClipboardList className="size-5 text-white" />
-        </div>
-        <div>
-          <div className="text-[15px] font-bold">PM System</div>
-          <div className="text-[11px] text-subtle">v1.0</div>
-        </div>
-      </div>
+  const sidebarWidth = collapsed ? "w-[72px]" : "w-[240px]";
 
-      {/* User info */}
-      <div className="mb-6 rounded-xl bg-card px-4 py-3.5">
-        <div className="mb-1 truncate text-sm font-semibold">{user.name}</div>
-        <div className="mb-2 truncate text-xs text-muted-foreground">
-          {user.email}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <Badge variant={roleVariant}>{user.role}</Badge>
-          {user.department && (
-            <Badge variant="secondary">{user.department.name}</Badge>
+  return (
+    <aside
+      className={cn(
+        "fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-border bg-card text-foreground transition-all duration-300 ease-out",
+        sidebarWidth,
+      )}
+    >
+      {/* Brand Header */}
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center border-b border-border px-4",
+          collapsed ? "justify-center" : "justify-between",
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black shadow-xs">
+            <ClipboardList className="size-4.5" />
+          </div>
+          {!collapsed && (
+            <span className="text-[15px] font-bold tracking-tight text-foreground">
+              PM System
+            </span>
           )}
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex flex-col gap-1">
-        <div className="mb-1 px-3.5 text-[11px] font-semibold tracking-wider text-subtle uppercase">
-          Menu
-        </div>
-        {NAV_ITEMS.filter((item) => item.roles.includes(user.role)).map(
-          (item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onNavClick}
-                className={cn(
-                  "flex items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-card hover:text-foreground",
-                  isActive &&
-                    "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary",
-                )}
-              >
-                <Icon className="size-[18px]" />
-                {item.label}
-              </Link>
-            );
-          },
-        )}
+      {/* Navigation Groups */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+        {NAV_GROUPS.map((group) => {
+          const visibleItems = group.items.filter((item) =>
+            item.roles.includes(user.role),
+          );
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={group.title} className="space-y-1">
+              {!collapsed && (
+                <div className="px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                  {group.title}
+                </div>
+              )}
+              {visibleItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" &&
+                    pathname.startsWith(`${item.href}/`));
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavClick}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150",
+                      collapsed && "justify-center px-0 py-2.5",
+                      isActive
+                        ? "bg-[#E2F793] text-zinc-950 font-bold border border-zinc-900/10 dark:bg-primary/20 dark:text-lime-300 dark:border-primary/25 shadow-xs"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-[18px] shrink-0 transition-colors",
+                        isActive
+                          ? "text-zinc-950 dark:text-lime-300"
+                          : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
 
-      {/* Logout */}
-      <button
-        type="button"
-        onClick={() => {
-          logout();
-          if (onNavClick) onNavClick();
-        }}
-        className="mt-auto flex w-full items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
-      >
-        <LogOut className="size-[18px]" />
-        Logout
-      </button>
+      {/* Collapse Toggle */}
+      <div className="px-3 py-1.5 border-t border-border">
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex w-full items-center justify-center rounded-lg py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
+        </button>
+      </div>
+
+      {/* User Section + Theme Selector + Logout */}
+      <div className="border-t border-border p-3 bg-secondary/30">
+        <div
+          className={cn(
+            "flex items-center gap-2.5 rounded-xl p-2 bg-card border border-border shadow-xs",
+            collapsed && "justify-center p-1.5 border-0 bg-transparent",
+          )}
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/20 border border-primary/30 text-xs font-bold text-zinc-900 dark:text-lime-300">
+            {user.name.slice(0, 1).toUpperCase()}
+          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-semibold text-foreground leading-tight">
+                {user.name}
+              </div>
+              <div className="truncate text-[11px] text-muted-foreground leading-tight">
+                {user.email}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Role badge (only when expanded) */}
+        {!collapsed && (
+          <div className="flex items-center gap-1.5 px-1 mt-2 mb-2">
+            <Badge variant={roleVariant} className="text-[10px] px-2 py-0">
+              {user.role}
+            </Badge>
+            {user.department && (
+              <Badge variant="secondary" className="text-[10px] px-2 py-0">
+                {user.department.name}
+              </Badge>
+            )}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            if (onNavClick) onNavClick();
+          }}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-150 hover:bg-destructive/10 hover:text-destructive",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <LogOut className="size-4 shrink-0" />
+          {!collapsed && <span>Logout</span>}
+        </button>
+      </div>
     </aside>
   );
 }

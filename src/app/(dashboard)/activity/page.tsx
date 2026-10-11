@@ -130,78 +130,104 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-4xl">
       <PageHeader
         title="Recent Activity"
-        description="Track all recent updates and progress across your teams"
+        description="Audit trail of all workflow changes, deliverables, and team transitions"
+        badge={
+          <span className="rounded-md border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-mono font-bold text-primary">
+            {auditLogs.length} EVENTS RECORDED
+          </span>
+        }
       />
 
-      <Card className="p-6">
-        {auditLogs.length === 0 ? (
-          <div className="p-8 text-center text-[13px] text-subtle">
-            No recent activity yet
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            {auditLogs.map((log: any) => {
-              const activity = getActivityIcon(log.changedColumn, log.newValue);
-              const Icon = activity.icon;
-              return (
-                <div
-                  key={log.id}
-                  className="flex gap-4 border-b border-border py-4 last:border-b-0"
-                >
-                  {/* Timeline dot */}
+      {auditLogs.length === 0 ? (
+        <Card className="p-12 text-center bg-surface-1/60 border-border/50">
+          <RefreshCw className="mx-auto mb-3 size-10 text-muted-foreground/60" />
+          <p className="text-sm font-semibold text-foreground">
+            No recent activity recorded yet
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Activity events will stream here automatically as tasks are created,
+            updated, or completed.
+          </p>
+        </Card>
+      ) : (
+        <Card className="p-6 border border-border/50 bg-surface-1/70">
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60" />
+
+            <div className="flex flex-col gap-2">
+              {auditLogs.map((log: any, index: number) => {
+                const activity = getActivityIcon(
+                  log.changedColumn,
+                  log.newValue,
+                );
+                const Icon = activity.icon;
+                return (
                   <div
-                    className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-full border-2",
-                      activity.tone,
-                    )}
+                    key={log.id}
+                    className="group relative flex gap-4 pl-0 py-3 hover:bg-surface-2/60 rounded-xl px-3 transition-colors border border-transparent hover:border-border/40"
+                    style={{ animationDelay: `${index * 30}ms` }}
                   >
-                    <Icon className="size-[18px]" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="mb-1 text-sm">
-                      <strong>{log.user?.name}</strong>{" "}
-                      <span className="text-muted-foreground">
-                        {activity.label}
-                      </span>{" "}
-                      <Link
-                        href={`/tasks/${log.task?.id}`}
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        {log.task?.title}
-                      </Link>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-subtle">
-                      <span className="inline-flex items-center gap-1">
-                        <FolderKanban className="size-3.5" />{" "}
-                        {log.task?.project?.name}
-                      </span>
-                      <span>•</span>
-                      <span>{timeAgo(log.createdAt)}</span>
-                      {log.changedColumn === "status" && log.oldValue && (
-                        <>
-                          <span>•</span>
-                          <span>
-                            <span className="rounded bg-destructive/12 px-2 py-0.5">
-                              {log.oldValue}
-                            </span>
-                            {" → "}
-                            <span className="rounded bg-success/12 px-2 py-0.5">
-                              {log.newValue}
-                            </span>
-                          </span>
-                        </>
+                    {/* Timeline dot */}
+                    <div
+                      className={cn(
+                        "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-xl border bg-surface-2 shadow-sm transition-transform duration-200 group-hover:scale-105",
+                        activity.tone,
                       )}
+                    >
+                      <Icon className="size-4" />
+                    </div>
+
+                    <div className="flex-1 min-w-0 py-0.5">
+                      <div className="mb-1 text-[13px]">
+                        <strong className="font-semibold text-foreground">
+                          {log.user?.name}
+                        </strong>{" "}
+                        <span className="text-muted-foreground">
+                          {activity.label}
+                        </span>{" "}
+                        <Link
+                          href={`/tasks/${log.task?.id}`}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {log.task?.title}
+                        </Link>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5 font-mono">
+                          <FolderKanban className="size-3 text-primary/70" />{" "}
+                          <span>{log.task?.project?.name}</span>
+                        </span>
+                        <span className="text-border">·</span>
+                        <span className="font-mono text-muted-foreground/80">
+                          {timeAgo(log.createdAt)}
+                        </span>
+                        {log.changedColumn === "status" && log.oldValue && (
+                          <>
+                            <span className="text-border">·</span>
+                            <span className="inline-flex items-center gap-1.5 font-mono">
+                              <span className="rounded-md border border-destructive/20 bg-destructive/10 px-1.5 py-0.2 text-[10px] text-destructive font-medium">
+                                {log.oldValue}
+                              </span>
+                              <span className="text-subtle">→</span>
+                              <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.2 text-[10px] text-primary font-medium">
+                                {log.newValue}
+                              </span>
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { ClipboardList, LogOut, User as UserIcon } from "lucide-react";
+import { ClipboardList, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ThemeSelector } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
@@ -22,36 +23,50 @@ export default function ClientLayout({
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Skeleton className="h-6 w-[200px]" />
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       {/* Client Header */}
-      <header className="sticky top-0 z-40 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-border bg-background-2/90 px-4 md:px-10 py-4 backdrop-blur-md">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-card/90 px-4 md:px-10 py-3.5 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary-2">
-            <ClipboardList className="size-5 text-white" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black shadow-xs">
+            <ClipboardList className="size-5" />
           </div>
           <div>
-            <span className="text-[15px] font-bold">Client Portal</span>
-            <span className="ml-2 text-[11px] text-subtle">by PM System</span>
+            <span className="text-[15px] font-bold text-foreground">
+              Client Portal
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground truncate max-w-[150px] md:max-w-none">
-            <UserIcon className="size-4 shrink-0" /> {user.name}
+
+        <div className="flex items-center gap-3 md:gap-4">
+          <ThemeSelector />
+
+          <span className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold text-foreground truncate max-w-[140px] md:max-w-none">
+            <span className="flex size-7 items-center justify-center rounded-full bg-primary/20 text-xs font-mono font-bold text-zinc-900 dark:text-lime-300">
+              {user.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="hidden sm:inline">{user.name}</span>
           </span>
-          <Button size="sm" variant="secondary" onClick={logout}>
-            <LogOut className="size-4 md:mr-2" />{" "}
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={logout}
+            className="rounded-full h-8 text-xs"
+          >
+            <LogOut className="size-3.5 md:mr-1.5" />{" "}
             <span className="hidden md:inline">Logout</span>
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-[1200px] px-4 md:px-10 py-6 md:py-8 overflow-x-hidden">
+
+      <main className="mx-auto max-w-[1200px] px-4 md:px-8 py-6 md:py-8 overflow-x-hidden">
         {children}
       </main>
     </div>

@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BlockedBy } from "@/components/blocked-by";
@@ -98,6 +98,84 @@ interface PendingEdit {
   details: VersionConflictDetails;
 }
 
+function AttachmentImagePreview({
+  fileUrl,
+  fileName,
+}: {
+  fileUrl: string;
+  fileName: string;
+}) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    if (!fileUrl.includes("/api/v1/uploads/")) {
+      setBlobUrl(fileUrl);
+      setLoading(false);
+      return;
+    }
+
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    fetch(fileUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load image preview");
+        return res.blob();
+      })
+      .then((blob) => {
+        if (active) {
+          objectUrl = URL.createObjectURL(blob);
+          setBlobUrl(objectUrl);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [fileUrl]);
+
+  if (loading) {
+    return (
+      <div className="flex h-24 items-center justify-center text-xs text-subtle">
+        Loading preview...
+      </div>
+    );
+  }
+
+  if (error || !blobUrl) {
+    return (
+      <div className="flex h-16 items-center justify-center text-xs text-subtle">
+        Preview unavailable
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={blobUrl}
+      alt={fileName}
+      className="block max-h-[300px] max-w-full rounded-lg object-contain"
+    />
+  );
+}
+
 export default function TaskDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -149,6 +227,53 @@ export default function TaskDetailPage() {
   const [baseline, setBaseline] = useState<TaskBaseline | null>(null);
   const [baseVersion, setBaseVersion] = useState<number | null>(null);
   const [conflict, setConflict] = useState<PendingEdit | null>(null);
+
+  async function handleOpenAttachment(fileUrl: string, fileName: string) {
+    if (!fileUrl.includes("/api/v1/uploads/")) {
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    try {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const res = await fetch(fileUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          toast.error("You do not have permission to access this attachment");
+        } else {
+          toast.error("Failed to download attachment");
+        }
+        return;
+      }
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const isViewable =
+        blob.type.startsWith("image/") ||
+        blob.type === "application/pdf" ||
+        Boolean(fileName.match(/\.(png|jpe?g|gif|webp|pdf)$/i));
+
+      if (isViewable) {
+        window.open(objectUrl, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    } catch {
+      toast.error("Failed to load attachment");
+    }
+  }
 
   const editForm = useForm<EditTaskFormData>({
     resolver: zodResolver(editTaskSchema),
@@ -399,58 +524,112 @@ export default function TaskDetailPage() {
   });
 
   return (
-    <div className="animate-fade-in">
-      {/* Back */}
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Back
-      </button>
+    <div className="animate-fade-in space-y-6">
+      {/* Task Header */}
+      <div className="rounded-2xl border border-border bg-card p-6 md:p-7 shadow-xs">
+        <div className="flex flex-col gap-4">
+          {/* Breadcrumb & Navigation */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface-2/60 px-3 py-1 font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              >
+                <ArrowLeft className="size-3.5" /> Back
+              </button>
+              <span className="text-subtle">/</span>
+              <Link
+                href={`/projects/${task.projectId}`}
+                className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground transition hover:text-primary"
+              >
+                <FolderKanban className="size-3.5" />
+                {task.project?.name || "Project"}
+              </Link>
+              <span className="text-subtle">/</span>
+              <span className="font-mono text-[11px] text-primary">
+                Task #{task.id.slice(0, 8)}
+              </span>
+            </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="mb-2 text-[28px] font-extrabold">{task.title}</h1>
-        <div className="flex flex-wrap gap-2">
-          <StatusBadge
-            status={task.effectiveStatus}
-            className="px-3.5 py-1 text-xs"
-          />
-          <Badge variant="secondary" className="px-3.5 py-1 text-xs">
-            <Building2 /> {task.department?.name}
-          </Badge>
-          <Link href={`/projects/${task.projectId}`}>
-            <Badge
-              variant="outline"
-              className="px-3.5 py-1 text-xs hover:border-primary"
-            >
-              <FolderKanban /> {task.project?.name}
-            </Badge>
-          </Link>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-mono font-bold text-muted-foreground">
+                v{task.version}
+              </span>
+              {task.clientVisible ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
+                  Client Visible
+                </span>
+              ) : (
+                <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Internal Only
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Title & Key Badges */}
+          <div>
+            <h1 className="mb-3 text-2xl font-extrabold tracking-tight text-foreground lg:text-3xl">
+              {task.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge
+                status={task.effectiveStatus}
+                className="px-3.5 py-1 text-xs"
+              />
+              <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs">
+                <Building2 className="size-3.5" /> {task.department?.name}
+              </Badge>
+              {task.assignee && (
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-surface-2/50 px-3 py-1 text-xs font-medium text-foreground">
+                  <span className="flex size-4 items-center justify-center rounded-full bg-primary/20 text-[9px] font-bold text-primary">
+                    {task.assignee.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span>{task.assignee.name}</span>
+                  {task.assignee.position && (
+                    <span className="text-[10px] text-subtle">
+                      ({task.assignee.position.name})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_340px]">
-        {/* Main Content */}
-        <div className="space-y-5">
-          {/* Description */}
-          <Card className="p-6">
-            <h3 className="mb-3 text-sm font-bold text-muted-foreground">
-              Description
-            </h3>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {task.description || "No description provided."}
-            </p>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_360px]">
+        {/* Main Content (Left Column) */}
+        <div className="space-y-6">
+          {/* Scope & Description Card */}
+          <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-6 shadow-sm backdrop-blur-md">
+            <div className="mb-3 flex items-center justify-between border-b border-border/40 pb-3">
+              <span className="text-[11px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                Deliverable Scope & Specification
+              </span>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-background/50 p-4">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                {task.description ||
+                  "No detailed specification provided for this task."}
+              </p>
+            </div>
           </Card>
 
-          {/* Dependencies */}
-          <Card className="p-6">
-            <div className="mb-3.5 flex items-center justify-between">
-              <h3 className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground">
-                <Link2 className="size-4" /> Dependencies (
-                {task.dependencies?.length || 0})
-              </h3>
+          {/* Prerequisites & Dependencies Sentinel */}
+          <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-6 shadow-sm backdrop-blur-md">
+            <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-3">
+              <div className="flex items-center gap-2">
+                <Link2 className="size-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">
+                  Prerequisites & Dependencies
+                </h3>
+                <span className="rounded-full border border-border/60 bg-surface-2/70 px-2 py-0.5 text-[10px] font-mono font-bold text-muted-foreground">
+                  {task.dependencies?.length || 0}
+                </span>
+              </div>
               {user?.role === "PM" && (
                 <Button
                   size="sm"
@@ -458,25 +637,50 @@ export default function TaskDetailPage() {
                     setDepSearch("");
                     setShowAddDep(true);
                   }}
+                  className="h-8 gap-1 px-3 text-xs font-semibold"
                 >
-                  <Plus /> Add Dependency
+                  <Plus className="size-3.5" /> Add Dependency
                 </Button>
               )}
             </div>
 
-            {/* Explanation */}
-            <div className="mb-3.5 flex gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs leading-relaxed text-subtle">
-              <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-warning" />
-              <span>
-                <strong>Dependencies</strong> = task lain yang harus selesai
-                (DONE) <strong>sebelum</strong> task ini bisa dikerjakan. Jika
-                ada dependency yang belum DONE, task ini otomatis jadi{" "}
-                <strong className="text-destructive">BLOCKED</strong>.
-              </span>
-            </div>
+            {/* Dependency Status Sentinel Callout */}
+            {task.dependencyStatus && !task.dependencyStatus.allDone ? (
+              <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-xs leading-relaxed text-destructive">
+                <Ban className="mt-0.5 size-4 shrink-0" />
+                <div>
+                  <strong className="block font-semibold">
+                    BLOCKED BY UNRESOLVED PREREQUISITES
+                  </strong>
+                  <span>
+                    Task ini terkunci karena{" "}
+                    {task.dependencyStatus.pendingCount} dependency belum
+                    selesai (DONE). Tindakan eksekusi dinonaktifkan sampai semua
+                    prasyarat terpenuhi.
+                  </span>
+                </div>
+              </div>
+            ) : task.dependencies && task.dependencies.length > 0 ? (
+              <div className="mb-4 flex items-center gap-2 rounded-2xl border border-success/30 bg-success/10 px-4 py-2.5 text-xs text-success">
+                <CheckCircle2 className="size-4 shrink-0" />
+                <span>
+                  <strong>All prerequisites cleared.</strong> Semua dependency
+                  telah diselesaikan.
+                </span>
+              </div>
+            ) : (
+              <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border/60 bg-surface-2/40 px-4 py-2.5 text-xs text-subtle">
+                <Lightbulb className="size-4 text-warning shrink-0" />
+                <span>
+                  <strong>Independent Deliverable:</strong> Task ini tidak
+                  memiliki hambatan dependency dan dapat dikerjakan secara
+                  langsung.
+                </span>
+              </div>
+            )}
 
             {task.dependencies && task.dependencies.length > 0 ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {task.dependencies.map((dep) => {
                   const removing =
                     removeDepMutation.isPending &&
@@ -484,29 +688,38 @@ export default function TaskDetailPage() {
                   return (
                     <div
                       key={dep.dependsOnId}
-                      className="flex items-center justify-between rounded-[10px] border border-border bg-card px-3.5 py-2.5"
+                      className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/80 px-4 py-3 transition-all hover:border-primary/40"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {dep.dependsOn.status === "DONE" ? (
-                          <CheckCircle2 className="size-4 text-success" />
+                          <div className="flex size-7 items-center justify-center rounded-full bg-success/15 text-success">
+                            <CheckCircle2 className="size-4" />
+                          </div>
                         ) : (
-                          <Clock className="size-4 text-warning" />
+                          <div className="flex size-7 items-center justify-center rounded-full bg-warning/15 text-warning">
+                            <Clock className="size-4" />
+                          </div>
                         )}
-                        <Link
-                          href={`/tasks/${dep.dependsOnId}`}
-                          className="text-sm font-medium hover:text-primary"
-                        >
-                          {dep.dependsOn.title}
-                        </Link>
+                        <div>
+                          <Link
+                            href={`/tasks/${dep.dependsOnId}`}
+                            className="text-sm font-semibold text-foreground transition hover:text-primary"
+                          >
+                            {dep.dependsOn.title}
+                          </Link>
+                          <div className="text-[11px] font-mono text-subtle">
+                            Status: {dep.dependsOn.status}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <StatusBadge status={dep.dependsOn.status} />
                         {user?.role === "PM" && (
                           <button
                             type="button"
                             onClick={() => removeDependency(dep.dependsOnId)}
                             disabled={removing}
-                            className="px-1 text-subtle transition-colors hover:text-destructive"
+                            className="rounded p-1 text-subtle transition-colors hover:bg-destructive/20 hover:text-destructive"
                             title="Remove dependency"
                           >
                             {removing ? "..." : <X className="size-4" />}
@@ -517,27 +730,21 @@ export default function TaskDetailPage() {
                   );
                 })}
               </div>
-            ) : (
-              <div className="p-4 text-center text-[13px] text-subtle">
-                No dependencies — task ini bisa langsung dikerjakan
-              </div>
-            )}
-
-            {task.dependencyStatus && !task.dependencyStatus.allDone && (
-              <div className="mt-3 flex items-center gap-2 rounded-[10px] border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 text-[13px] text-destructive">
-                <Ban className="size-4" /> Task ini <strong>BLOCKED</strong> —{" "}
-                {task.dependencyStatus.pendingCount} dependency belum selesai
-              </div>
-            )}
+            ) : null}
           </Card>
 
           {/* Attachments Section */}
-          <Card className="p-6">
-            <div className="mb-3.5 flex items-center justify-between">
-              <h3 className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground">
-                <Paperclip className="size-4" /> Attachments (
-                {attachments.length})
-              </h3>
+          <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-6 shadow-sm backdrop-blur-md">
+            <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-3">
+              <div className="flex items-center gap-2">
+                <Paperclip className="size-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">
+                  Deliverables & Attachments
+                </h3>
+                <span className="rounded-full border border-border/60 bg-surface-2/70 px-2 py-0.5 text-[10px] font-mono font-bold text-muted-foreground">
+                  {attachments.length}
+                </span>
+              </div>
               {canManageAttachments && (
                 <Button
                   size="sm"
@@ -546,18 +753,31 @@ export default function TaskDetailPage() {
                   title={
                     isBlocked ? "Cannot add attachment to a BLOCKED task" : ""
                   }
+                  className="h-8 gap-1 px-3 text-xs font-semibold"
                 >
-                  <Plus /> Add Attachment
+                  <Plus className="size-3.5" /> Add Attachment
                 </Button>
               )}
             </div>
 
             {attachments.length === 0 ? (
-              <div className="p-5 text-center text-[13px] text-subtle">
-                No attachments yet
+              <div className="rounded-2xl border border-dashed border-border/70 bg-background/40 p-8 text-center">
+                <Paperclip className="mx-auto mb-2 size-8 text-subtle opacity-50" />
+                <p className="text-xs font-medium text-muted-foreground">
+                  No attachments or external assets linked yet.
+                </p>
+                {canManageAttachments && !isBlocked && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAttachment(true)}
+                    className="mt-2 text-xs font-semibold text-primary hover:underline"
+                  >
+                    + Add first file or URL link
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {attachments.map((att) => {
                   const isImage = att.mimeType?.startsWith("image");
                   const isLink = att.mimeType === "text/uri-list";
@@ -569,23 +789,26 @@ export default function TaskDetailPage() {
                   return (
                     <div
                       key={att.id}
-                      className="rounded-[10px] border border-border bg-card px-4 py-3"
+                      className="rounded-2xl border border-border/70 bg-card/80 p-4 transition-all hover:border-primary/40"
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <AttIcon className="size-[18px] text-primary" />
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <AttIcon className="size-4" />
+                          </div>
                           <div>
-                            <a
-                              href={att.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[13px] font-semibold text-primary hover:underline"
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenAttachment(att.fileUrl, att.fileName)
+                              }
+                              className="cursor-pointer text-left text-sm font-semibold text-primary hover:underline"
                             >
                               {att.fileName}
-                            </a>
-                            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-subtle">
+                            </button>
+                            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-subtle">
                               <UserIcon className="size-3" /> {att.user?.name} ·{" "}
-                              {new Date(att.createdAt).toLocaleString()}
+                              {new Date(att.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
@@ -595,7 +818,7 @@ export default function TaskDetailPage() {
                             type="button"
                             onClick={() => deleteAttachment(att.id)}
                             disabled={isBlocked}
-                            className="p-1 text-subtle transition-colors enabled:hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30"
+                            className="rounded p-1 text-subtle transition-colors enabled:hover:bg-destructive/20 enabled:hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30"
                             title={
                               isBlocked
                                 ? "Cannot delete attachment of a BLOCKED task"
@@ -607,19 +830,19 @@ export default function TaskDetailPage() {
                         )}
                       </div>
                       {isImage && (
-                        <a
-                          href={att.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 block overflow-hidden rounded-lg border border-border"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleOpenAttachment(att.fileUrl, att.fileName)
+                          }
+                          className="mt-3 block w-full cursor-pointer overflow-hidden rounded-xl border border-border/60 bg-background/50 p-1 text-left transition-opacity hover:opacity-90"
+                          title="Click to view full image"
                         >
-                          {/* biome-ignore lint/performance/noImgElement: user-uploaded dynamic URL */}
-                          <img
-                            src={att.fileUrl}
-                            alt={att.fileName}
-                            className="block max-h-[300px] max-w-full object-contain"
+                          <AttachmentImagePreview
+                            fileUrl={att.fileUrl}
+                            fileName={att.fileName}
                           />
-                        </a>
+                        </button>
                       )}
                     </div>
                   );
@@ -630,19 +853,23 @@ export default function TaskDetailPage() {
 
           {/* Audit Logs */}
           {auditLogs.length > 0 && (
-            <Card className="p-6">
-              <h3 className="mb-4 text-sm font-bold text-muted-foreground">
-                Audit Trail ({auditLogs.length})
-              </h3>
-              <div className="flex flex-col gap-2">
+            <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-6 shadow-sm backdrop-blur-md">
+              <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-3">
+                <span className="text-[11px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                  Audit Trail History ({auditLogs.length})
+                </span>
+              </div>
+              <div className="flex flex-col gap-2.5">
                 {auditLogs.slice(0, 10).map((log) => (
                   <div
                     key={log.id}
-                    className="rounded-[10px] border border-border bg-card px-3.5 py-2.5 text-[13px]"
+                    className="rounded-2xl border border-border/60 bg-card/70 p-3.5 text-xs backdrop-blur-sm"
                   >
-                    <div className="mb-1 flex justify-between">
-                      <span className="font-semibold">{log.user.name}</span>
-                      <span className="text-[11px] text-subtle">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <span className="font-semibold text-foreground">
+                        {log.user.name}
+                      </span>
+                      <span className="font-mono text-[11px] text-subtle">
                         {new Date(log.createdAt).toLocaleString()}
                       </span>
                     </div>
@@ -655,7 +882,7 @@ export default function TaskDetailPage() {
                         <>
                           {" "}
                           from{" "}
-                          <code className="rounded bg-destructive/15 px-1.5 py-px">
+                          <code className="rounded bg-destructive/15 px-1.5 py-0.5 text-[11px] text-destructive">
                             {log.oldValue}
                           </code>
                         </>
@@ -664,7 +891,7 @@ export default function TaskDetailPage() {
                         <>
                           {" "}
                           to{" "}
-                          <code className="rounded bg-success/15 px-1.5 py-px">
+                          <code className="rounded bg-success/15 px-1.5 py-0.5 text-[11px] text-success">
                             {log.newValue}
                           </code>
                         </>
@@ -677,18 +904,23 @@ export default function TaskDetailPage() {
           )}
         </div>
 
-        {/* Right sidebar */}
-        <div className="space-y-4">
-          {/* Actions */}
+        {/* Right Sidebar (Execution & Metadata Deck) */}
+        <div className="space-y-5">
+          {/* Action Console */}
           {canChangeStatus && (
-            <Card className="p-5">
-              <h3 className="mb-3 text-[13px] font-bold text-muted-foreground">
-                Actions
-              </h3>
-              <div className="flex flex-col gap-2">
+            <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-5 shadow-lg backdrop-blur-md">
+              <div className="mb-3.5 flex items-center justify-between border-b border-border/40 pb-2.5">
+                <span className="text-[10px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                  Execution Console
+                </span>
+                <span className="text-[10px] font-mono text-primary">
+                  LIVE SYNC
+                </span>
+              </div>
+              <div className="flex flex-col gap-2.5">
                 {task.status === "TODO" && (
                   <Button
-                    className="w-full"
+                    className="w-full h-10 font-bold"
                     onClick={() => updateStatus("IN_PROGRESS")}
                     disabled={isBlocked}
                     title={
@@ -697,14 +929,13 @@ export default function TaskDetailPage() {
                         : ""
                     }
                   >
-                    <Play /> Start Task
+                    <Play className="size-4" /> Start Execution
                   </Button>
                 )}
                 {task.status === "IN_PROGRESS" && (
                   <>
                     <Button
-                      variant="outline"
-                      className="w-full border-success/30 bg-success/15 text-success hover:bg-success/25"
+                      className="w-full h-11 bg-primary text-primary-foreground font-bold hover:bg-primary-2 shadow-xs transition-all"
                       onClick={() => updateStatus("DONE")}
                       disabled={!canComplete || isBlocked}
                       title={
@@ -715,47 +946,49 @@ export default function TaskDetailPage() {
                             : "Only the assigned executor can complete this task"
                       }
                     >
-                      <CheckCircle2 /> Mark as Done
+                      <CheckCircle2 className="size-4" /> Complete Deliverable
+                      (Done)
                     </Button>
                     {!canComplete && (
-                      <p className="text-[11px] text-subtle">
-                        Hanya pelaksana (assignee) yang dapat menyelesaikan
-                        task.
+                      <p className="rounded-xl border border-warning/20 bg-warning/5 p-2.5 text-[11px] text-warning">
+                        Hanya pelaksana tugas (
+                        {task.assignee?.name || "Assignee"}) yang berhak
+                        menandai selesai.
                       </p>
                     )}
                     <Button
                       variant="secondary"
-                      className="w-full"
+                      className="w-full text-xs"
                       onClick={() => updateStatus("TODO")}
                       disabled={isBlocked}
                     >
-                      <Undo2 /> Revert to TODO
+                      <Undo2 className="size-3.5" /> Revert to TODO
                     </Button>
                   </>
                 )}
                 {task.status === "DONE" && (
                   <Button
                     variant="secondary"
-                    className="w-full"
+                    className="w-full text-xs"
                     onClick={() => updateStatus("IN_PROGRESS")}
                     disabled={isBlocked}
                   >
-                    <RotateCcw /> Reopen
+                    <RotateCcw className="size-3.5" /> Reopen Task
                   </Button>
                 )}
               </div>
             </Card>
           )}
 
-          {/* Blocked message */}
+          {/* Blocked Alert Banner if locked */}
           {isBlocked && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-5 text-[13px] text-destructive">
-              <div className="mb-3 flex gap-2">
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-5 text-xs text-destructive">
+              <div className="mb-3 flex items-start gap-2">
                 <Ban className="mt-0.5 size-4 shrink-0" />
                 <span>
                   Task ini <strong>BLOCKED</strong> karena{" "}
                   {task.dependencyStatus?.pendingCount || 0} dependency belum
-                  selesai. Tombol aksi dikunci di UI dan API.
+                  selesai. Aksi status dinonaktifkan.
                 </span>
               </div>
               <BlockedBy
@@ -767,31 +1000,32 @@ export default function TaskDetailPage() {
             </div>
           )}
 
-          {/* Details */}
-          <Card className="p-5">
-            <div className="mb-3.5 flex items-center justify-between">
-              <h3 className="text-[13px] font-bold text-muted-foreground">
-                Details
-              </h3>
+          {/* Details & Governance Deck */}
+          <Card className="overflow-hidden border border-border/80 bg-surface-1/90 p-5 shadow-lg backdrop-blur-md">
+            <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-3">
+              <span className="text-[10px] font-mono font-bold tracking-wider text-muted-foreground uppercase">
+                Task Governance
+              </span>
               {user?.role === "PM" && !editing && (
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={startEditing}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                    className="h-7 gap-1 px-2 text-xs"
                   >
                     <Pencil className="size-3" /> Edit
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     id="delete-task-btn"
-                    type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={handleDeleteTask}
                     disabled={deleteTaskMutation.isPending}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-destructive hover:underline disabled:opacity-50"
+                    className="h-7 gap-1 px-2 text-xs text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="size-3" />{" "}
-                    {deleteTaskMutation.isPending ? "Deleting..." : "Delete"}
-                  </button>
+                    <Trash2 className="size-3" />
+                  </Button>
                 </div>
               )}
             </div>
@@ -1231,9 +1465,11 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className="text-subtle">{label}</dt>
-      <dd className="text-right">{children}</dd>
+    <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-2.5 last:border-b-0 last:pb-0">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="text-right text-xs font-semibold text-foreground">
+        {children}
+      </dd>
     </div>
   );
 }

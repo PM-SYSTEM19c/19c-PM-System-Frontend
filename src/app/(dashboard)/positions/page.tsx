@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Briefcase, Pencil, Plus, Trash2 } from "lucide-react";
+import { Briefcase, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -107,58 +107,76 @@ export default function PositionsPage() {
 
   return (
     <>
-      <div className="animate-fade-in">
+      <div className="space-y-6 animate-fade-in max-w-4xl">
         <PageHeader
           title="Positions"
-          description="Manage user job titles"
+          description="Standardized organizational role designations and functional titles"
+          badge={
+            <span className="rounded-md border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-mono font-bold text-primary">
+              {positions.length} TITLES
+            </span>
+          }
           actions={
-            <Button onClick={openCreate}>
-              <Plus /> New Position
+            <Button
+              onClick={openCreate}
+              className="bg-primary text-primary-foreground font-bold shadow-xs hover:bg-primary-2"
+            >
+              <Plus className="size-4" /> New Position
             </Button>
           }
         />
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-          {positions.map((pos) => (
-            <Card key={pos.id} interactive className="flex flex-col p-5">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h3 className="flex items-center gap-2 text-base font-bold">
-                  <Briefcase className="size-4 text-primary" /> {pos.name}
-                </h3>
-                <div className="flex gap-1">
+        {/* Positions as a vertical list */}
+        <Card className="divide-y divide-border/40 overflow-hidden border border-border/50 bg-surface-1/70">
+          {positions.length === 0 ? (
+            <div className="p-10 text-center text-[13px] text-muted-foreground">
+              No positions found. Create your first position to get started.
+            </div>
+          ) : (
+            positions.map((pos) => (
+              <div
+                key={pos.id}
+                className="group flex items-center justify-between gap-4 px-5 py-4 hover:bg-surface-1/40 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                    <Briefcase className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-[14px] font-semibold text-foreground truncate">
+                      {pos.name}
+                    </h3>
+                    {pos.description && (
+                      <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+                        {pos.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="size-8"
+                    className="size-7 rounded-full"
                     onClick={() => openEdit(pos)}
                     title="Edit"
                   >
-                    <Pencil className="text-primary" />
+                    <Pencil className="size-3.5 text-primary" />
                   </Button>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="size-8 hover:bg-destructive/10"
+                    className="size-7 rounded-full hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => handleDelete(pos.id)}
                     title="Delete"
                   >
-                    <Trash2 className="text-destructive" />
+                    <Trash2 className="size-3.5 text-destructive/70" />
                   </Button>
                 </div>
               </div>
-              {pos.description && (
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  {pos.description}
-                </p>
-              )}
-            </Card>
-          ))}
-          {positions.length === 0 && (
-            <div className="col-span-full rounded-xl border border-dashed border-border bg-card p-10 text-center text-subtle">
-              No positions found
-            </div>
+            ))
           )}
-        </div>
+        </Card>
       </div>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>

@@ -1,8 +1,20 @@
 "use client";
 
-import { Check, Pencil, X } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Check,
+  LayoutGrid,
+  List,
+  Pencil,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  Users as UsersIcon,
+  X,
+} from "lucide-react";
 import { useState } from "react";
-import { PageHeader } from "@/components/page";
+import { PageHeader, StatCard } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,9 +41,11 @@ const ROLE_VARIANT = {
   CLIENT: "secondary",
 } as const;
 const ROLE_AVATAR = {
-  PM: "bg-primary/20 text-primary",
-  INTERNAL: "bg-[#00cec9]/20 text-[#00cec9]",
-  CLIENT: "bg-[#636e72]/30 text-[#b2bec3]",
+  PM: "bg-primary/20 text-zinc-900 dark:text-lime-300 border border-primary/30 font-mono",
+  INTERNAL:
+    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-mono",
+  CLIENT:
+    "bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/25 font-mono",
 } as const;
 
 export default function UsersPage() {
@@ -39,6 +53,11 @@ export default function UsersPage() {
   const { data: users = [], isLoading: loading } = useUsers("pageSize=100");
   const { data: positions = [] } = usePositions();
   const updateUserMutation = useUpdateUser();
+
+  // Search, Filter & View State
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // Edit State
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -105,121 +124,386 @@ export default function UsersPage() {
     );
   }
 
-  return (
-    <div className="animate-fade-in">
-      <PageHeader title="Users" description={`${users.length} user(s)`} />
+  const internalCount = users.filter((u) => u.role === "INTERNAL").length;
+  const pmCount = users.filter((u) => u.role === "PM").length;
+  const clientCount = users.filter((u) => u.role === "CLIENT").length;
+  const pendingCount = users.filter((u) => u.status === "PENDING").length;
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border">
-                {[
-                  "Name",
-                  "Email",
-                  "Role",
-                  "Status",
-                  "Position",
-                  "Department",
-                  "Action",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3.5 text-left text-xs font-semibold text-subtle uppercase"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-b border-border transition-colors last:border-b-0 hover:bg-card/40"
-                >
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={cn(
-                          "flex size-8 items-center justify-center rounded-full text-sm font-bold",
-                          ROLE_AVATAR[u.role],
-                        )}
-                      >
-                        {u.name[0]}
-                      </div>
-                      <span className="text-sm font-semibold">{u.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 text-[13px] text-muted-foreground">
-                    {u.email}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <Badge variant={ROLE_VARIANT[u.role]}>{u.role}</Badge>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <Badge
-                      variant={
-                        u.status === "PENDING"
-                          ? "warning"
-                          : u.status === "REJECTED"
-                            ? "destructive"
-                            : "success"
-                      }
-                    >
-                      {u.status || "APPROVED"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3.5 text-[13px] text-muted-foreground">
-                    {u.position?.name || "—"}
-                  </td>
-                  <td className="px-4 py-3.5 text-[13px] text-muted-foreground">
-                    {u.department?.name || "—"}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    {currentUser?.role === "PM" && (
-                      <div className="flex gap-2">
-                        {u.status === "PENDING" ? (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setApprovingUser(u);
-                                setEditPosition("");
-                              }}
-                            >
-                              <Check /> Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject(u.id)}
-                            >
-                              <X /> Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => {
-                              setEditingUser(u);
-                              setEditRole(u.role);
-                              setEditPosition(u.position?.id || "");
-                            }}
-                          >
-                            <Pencil /> Edit
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  const filteredUsers = users.filter((u) => {
+    if (
+      search &&
+      !u.name.toLowerCase().includes(search.toLowerCase()) &&
+      !u.email.toLowerCase().includes(search.toLowerCase())
+    ) {
+      return false;
+    }
+    if (roleFilter === "PM" && u.role !== "PM") return false;
+    if (roleFilter === "INTERNAL" && u.role !== "INTERNAL") return false;
+    if (roleFilter === "CLIENT" && u.role !== "CLIENT") return false;
+    if (roleFilter === "PENDING" && u.status !== "PENDING") return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader
+        title="Users"
+        description="Manage organizational accounts, roles, and system access rights"
+      />
+
+      {/* Users Summary Metric Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <StatCard
+          label="Total Accounts"
+          value={users.length}
+          icon={UsersIcon}
+          tone="primary"
+          subtext="Active system identities"
+        />
+        <StatCard
+          label="Internal Team"
+          value={internalCount}
+          icon={UserCheck}
+          tone="info"
+          subtext="Engineers and designers"
+        />
+        <StatCard
+          label="Project Managers"
+          value={pmCount}
+          icon={ShieldCheck}
+          tone="success"
+          subtext="Workflow administrators"
+        />
+        <StatCard
+          label="Pending Approvals"
+          value={pendingCount}
+          icon={Briefcase}
+          tone={pendingCount > 0 ? "warning" : "primary"}
+          subtext={pendingCount > 0 ? "Action required" : "All users vetted"}
+        />
+      </div>
+
+      {/* Search, Filter & View Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/50 bg-surface-1/60 p-3">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-border/60 bg-surface-2/80 px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+          />
         </div>
-      </Card>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Role Filter Chips */}
+          <div className="flex items-center gap-1">
+            {[
+              { key: "ALL", label: `All (${users.length})` },
+              { key: "PM", label: `PM (${pmCount})` },
+              { key: "INTERNAL", label: `Internal (${internalCount})` },
+              { key: "CLIENT", label: `Clients (${clientCount})` },
+              ...(pendingCount > 0
+                ? [{ key: "PENDING", label: `Pending (${pendingCount})` }]
+                : []),
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setRoleFilter(tab.key)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1.5 text-xs font-semibold font-mono transition-all",
+                  roleFilter === tab.key
+                    ? "bg-primary/15 text-primary border border-primary/30"
+                    : "text-muted-foreground hover:bg-surface-3 hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-lg border border-border/50 bg-surface-2/60 p-0.5 ml-1">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "rounded-md p-1.5 transition-colors",
+                viewMode === "grid"
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Grid View"
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "rounded-md p-1.5 transition-colors",
+                viewMode === "table"
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Table View"
+            >
+              <List className="size-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Users Presentation */}
+      {filteredUsers.length === 0 ? (
+        <Card className="p-12 text-center bg-surface-1/60 border-border/50">
+          <UsersIcon className="mx-auto mb-3 size-10 text-muted-foreground/60" />
+          <p className="text-sm font-semibold text-foreground">
+            No matching users found
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Try adjusting your search query or filter selection.
+          </p>
+        </Card>
+      ) : viewMode === "grid" ? (
+        /* Card Grid View */
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+          {filteredUsers.map((u) => (
+            <Card
+              key={u.id}
+              interactive
+              className="p-4 flex flex-col border border-border/50 bg-surface-1/70 hover:border-primary/40 hover:bg-surface-2/80 transition-all"
+            >
+              {/* User Header */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-sm",
+                      ROLE_AVATAR[u.role],
+                    )}
+                  >
+                    {u.name[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[14px] font-semibold text-foreground truncate">
+                      {u.name}
+                    </div>
+                    <div className="text-[12px] font-mono text-muted-foreground truncate">
+                      {u.email}
+                    </div>
+                  </div>
+                </div>
+                {currentUser?.role === "PM" && (
+                  <div className="flex gap-1 shrink-0">
+                    {u.status === "PENDING" ? (
+                      <>
+                        <Button
+                          size="icon"
+                          className="size-7 rounded-full bg-primary text-primary-foreground font-bold hover:bg-primary-2"
+                          onClick={() => {
+                            setApprovingUser(u);
+                            setEditPosition("");
+                          }}
+                          title="Approve"
+                        >
+                          <Check className="size-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="size-7 rounded-full"
+                          onClick={() => handleReject(u.id)}
+                          title="Reject"
+                        >
+                          <X className="size-3.5" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-7 rounded-lg text-muted-foreground hover:bg-surface-3 hover:text-foreground"
+                        onClick={() => {
+                          setEditingUser(u);
+                          setEditRole(u.role);
+                          setEditPosition(u.position?.id || "");
+                        }}
+                        title="Edit"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Meta Row */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-auto pt-3 border-t border-border/40">
+                <Badge variant={ROLE_VARIANT[u.role]} className="text-[10px]">
+                  {u.role}
+                </Badge>
+                <Badge
+                  variant={
+                    u.status === "PENDING"
+                      ? "warning"
+                      : u.status === "REJECTED"
+                        ? "destructive"
+                        : "success"
+                  }
+                  className="text-[10px]"
+                >
+                  {u.status || "APPROVED"}
+                </Badge>
+                {u.position && (
+                  <span className="text-[10px] text-muted-foreground font-medium px-2 py-0.5 rounded-md bg-surface-3/80 border border-border/30">
+                    {u.position.name}
+                  </span>
+                )}
+                {u.department && (
+                  <span className="text-[10px] text-muted-foreground font-medium px-2 py-0.5 rounded-md bg-surface-3/80 border border-border/30">
+                    {u.department.name}
+                  </span>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* High-Density Grass Table View */
+        <Card className="overflow-hidden border border-border/50 bg-surface-1/70">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border/40 bg-surface-2/60 text-muted-foreground font-mono uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-4">User</th>
+                  <th className="py-3 px-4">Role</th>
+                  <th className="py-3 px-4">Department / Position</th>
+                  <th className="py-3 px-4">Status</th>
+                  {currentUser?.role === "PM" && (
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {filteredUsers.map((u) => (
+                  <tr
+                    key={u.id}
+                    className="hover:bg-surface-2/60 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={cn(
+                            "flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                            ROLE_AVATAR[u.role],
+                          )}
+                        >
+                          {u.name[0]}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground">
+                            {u.name}
+                          </div>
+                          <div className="text-[11px] font-mono text-muted-foreground">
+                            {u.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={ROLE_VARIANT[u.role]}
+                        className="text-[10px]"
+                      >
+                        {u.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {u.department && (
+                          <span className="rounded-md bg-surface-3/80 border border-border/30 px-2 py-0.5 text-[10px] text-muted-foreground font-mono">
+                            {u.department.name}
+                          </span>
+                        )}
+                        {u.position && (
+                          <span className="rounded-md bg-surface-3/80 border border-border/30 px-2 py-0.5 text-[10px] text-muted-foreground font-mono">
+                            {u.position.name}
+                          </span>
+                        )}
+                        {!u.department && !u.position && (
+                          <span className="text-muted-foreground/50 text-[11px]">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={
+                          u.status === "PENDING"
+                            ? "warning"
+                            : u.status === "REJECTED"
+                              ? "destructive"
+                              : "success"
+                        }
+                        className="text-[10px]"
+                      >
+                        {u.status || "APPROVED"}
+                      </Badge>
+                    </td>
+                    {currentUser?.role === "PM" && (
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {u.status === "PENDING" ? (
+                            <>
+                              <Button
+                                size="icon"
+                                className="size-6 rounded-full bg-primary text-primary-foreground font-bold hover:bg-primary-2"
+                                onClick={() => {
+                                  setApprovingUser(u);
+                                  setEditPosition("");
+                                }}
+                                title="Approve"
+                              >
+                                <Check className="size-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="destructive"
+                                className="size-6 rounded-full"
+                                onClick={() => handleReject(u.id)}
+                                title="Reject"
+                              >
+                                <X className="size-3" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-6 rounded-md text-muted-foreground hover:bg-surface-3 hover:text-foreground"
+                              onClick={() => {
+                                setEditingUser(u);
+                                setEditRole(u.role);
+                                setEditPosition(u.position?.id || "");
+                              }}
+                              title="Edit"
+                            >
+                              <Pencil className="size-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* Edit Dialog */}
       <Dialog

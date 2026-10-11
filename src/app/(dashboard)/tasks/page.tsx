@@ -26,26 +26,34 @@ import type { Task } from "@/types";
 
 const FILTER_STYLES: Record<string, { active: string; count: string }> = {
   "": {
-    active: "border-primary bg-primary/10 text-primary",
-    count: "text-primary",
+    active:
+      "border-primary/40 bg-primary/20 text-zinc-950 dark:text-lime-300 font-bold",
+    count: "text-zinc-950 dark:text-lime-300",
   },
-  TODO: { active: "border-info bg-info/10 text-info", count: "text-info" },
+  TODO: {
+    active:
+      "border-sky-500/40 bg-sky-500/15 text-sky-800 dark:text-sky-300 font-bold",
+    count: "text-sky-700 dark:text-sky-400",
+  },
   IN_PROGRESS: {
-    active: "border-warning bg-warning/10 text-warning",
-    count: "text-warning",
+    active:
+      "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold",
+    count: "text-amber-700 dark:text-amber-400",
   },
   DONE: {
-    active: "border-success bg-success/10 text-success",
-    count: "text-success",
+    active:
+      "border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold",
+    count: "text-emerald-700 dark:text-emerald-400",
   },
   BLOCKED: {
-    active: "border-destructive bg-destructive/10 text-destructive",
-    count: "text-destructive",
+    active:
+      "border-red-500/40 bg-red-500/15 text-red-800 dark:text-red-300 font-bold",
+    count: "text-red-700 dark:text-red-400",
   },
 };
 
 const actionBtn =
-  "inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-colors [&_svg]:size-3";
+  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 [&_svg]:size-3 active:scale-95";
 
 export default function YourTasksPage() {
   const { user } = useAuth();
@@ -151,23 +159,30 @@ export default function YourTasksPage() {
               key={item.key}
               onClick={() => setFilterStatus(item.key)}
               className={cn(
-                "flex min-w-[100px] items-center gap-2 rounded-xl border px-4 py-3 transition-all",
+                "flex min-w-[110px] items-center gap-3 rounded-2xl border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5",
                 active
                   ? s.active
-                  : "border-border bg-card text-muted-foreground hover:border-primary/50",
+                  : "border-border/80 bg-card/70 text-muted-foreground hover:border-primary/40 hover:bg-card",
               )}
             >
-              <span className={cn("text-[22px] font-extrabold", s.count)}>
+              <span
+                className={cn(
+                  "text-[24px] font-mono font-extrabold leading-none",
+                  s.count,
+                )}
+              >
                 {item.count}
               </span>
-              <span className="text-xs font-semibold">{item.label}</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {item.label}
+              </span>
             </button>
           );
         })}
       </div>
 
       {/* Search */}
-      <div className="relative mb-6 max-w-xs">
+      <div className="relative mb-6 max-w-sm">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-subtle" />
         <Input
           placeholder="Search your tasks..."
@@ -179,17 +194,19 @@ export default function YourTasksPage() {
 
       {/* Tasks grouped by project */}
       {filteredTasks.length === 0 ? (
-        <Card className="p-16 text-center">
-          <PartyPopper className="mx-auto mb-4 size-12 text-subtle" />
-          <p className="text-[15px] font-medium text-muted-foreground">
+        <Card className="p-12 text-center bg-surface-1/60 border-border/50">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-border/60 bg-surface-2 text-muted-foreground mb-4">
+            <CheckCircle2 className="size-6 text-primary" />
+          </div>
+          <p className="text-[15px] font-bold text-foreground">
             {filterStatus
-              ? "No tasks with this status"
+              ? "No tasks with this filter"
               : "No tasks assigned to you"}
           </p>
-          <p className="mt-2 text-[13px] text-subtle">
+          <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
             {filterStatus
-              ? "Try a different filter"
-              : "Tasks will appear here when assigned by a PM"}
+              ? "Try selecting a different status filter to view deliverables."
+              : "Tasks assigned to you by your project manager will appear directly in this board."}
           </p>
         </Card>
       ) : (
@@ -197,19 +214,21 @@ export default function YourTasksPage() {
           <div key={projId} className="mb-6">
             <Link
               href={`/projects/${projId}`}
-              className="mb-3 flex items-center gap-2 py-2 hover:text-primary"
+              className="mb-3 inline-flex items-center gap-2 py-1.5 text-foreground hover:text-primary transition-colors group"
             >
-              <FolderKanban className="size-4" />
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <FolderKanban className="size-3.5" />
+              </div>
               <h2 className="text-base font-bold">{group.name}</h2>
-              <span className="ml-1 text-xs text-subtle">
-                ({group.tasks.length})
+              <span className="ml-1 rounded-full bg-card px-2 py-0.5 text-xs font-mono font-semibold text-subtle border border-border">
+                {group.tasks.length}
               </span>
             </Link>
             <div className="flex flex-col gap-2">
               {group.tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-3.5 transition-all hover:border-primary"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-4 py-3.5 transition-all duration-150 hover:border-zinc-400 dark:hover:border-zinc-700 hover:shadow-xs"
                 >
                   <Link href={`/tasks/${task.id}`} className="min-w-0 flex-1">
                     <div className="mb-1 text-sm font-semibold">
