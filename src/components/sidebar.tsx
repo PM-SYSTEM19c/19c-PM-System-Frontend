@@ -71,7 +71,7 @@ export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
     <aside className="fixed top-0 left-0 z-40 flex h-screen w-[260px] flex-col border-r border-border bg-background-2 px-4 py-6">
       {/* Brand */}
       <div className="mb-8 flex items-center gap-3 px-1">
-        <div className="flex size-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_20px_rgba(108,92,231,0.35)]">
+        <div className="flex size-9 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_35%,transparent)]">
           <ClipboardList className="size-5 text-white" />
         </div>
         <div>

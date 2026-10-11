@@ -680,7 +680,7 @@ export default function TaskDetailPage() {
         {/* Right sidebar */}
         <div className="space-y-4">
           {/* Actions */}
-          {canChangeStatus && !isBlocked && (
+          {canChangeStatus && (
             <Card className="p-5">
               <h3 className="mb-3 text-[13px] font-bold text-muted-foreground">
                 Actions
@@ -690,6 +690,12 @@ export default function TaskDetailPage() {
                   <Button
                     className="w-full"
                     onClick={() => updateStatus("IN_PROGRESS")}
+                    disabled={isBlocked}
+                    title={
+                      isBlocked
+                        ? "Task is BLOCKED due to incomplete dependencies"
+                        : ""
+                    }
                   >
                     <Play /> Start Task
                   </Button>
@@ -700,11 +706,13 @@ export default function TaskDetailPage() {
                       variant="outline"
                       className="w-full border-success/30 bg-success/15 text-success hover:bg-success/25"
                       onClick={() => updateStatus("DONE")}
-                      disabled={!canComplete}
+                      disabled={!canComplete || isBlocked}
                       title={
-                        canComplete
-                          ? ""
-                          : "Only the assigned executor can complete this task"
+                        isBlocked
+                          ? "Task is BLOCKED due to incomplete dependencies"
+                          : canComplete
+                            ? ""
+                            : "Only the assigned executor can complete this task"
                       }
                     >
                       <CheckCircle2 /> Mark as Done
@@ -719,6 +727,7 @@ export default function TaskDetailPage() {
                       variant="secondary"
                       className="w-full"
                       onClick={() => updateStatus("TODO")}
+                      disabled={isBlocked}
                     >
                       <Undo2 /> Revert to TODO
                     </Button>
@@ -729,6 +738,7 @@ export default function TaskDetailPage() {
                     variant="secondary"
                     className="w-full"
                     onClick={() => updateStatus("IN_PROGRESS")}
+                    disabled={isBlocked}
                   >
                     <RotateCcw /> Reopen
                   </Button>

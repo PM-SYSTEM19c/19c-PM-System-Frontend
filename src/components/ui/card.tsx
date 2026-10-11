@@ -12,7 +12,7 @@ function Card({
       className={cn(
         "rounded-2xl border border-border bg-gradient-to-br from-card/80 to-background-2/90 backdrop-blur-md transition-all duration-300",
         interactive &&
-          "hover:border-primary/30 hover:shadow-[0_0_30px_rgba(108,92,231,0.1)]",
+          "hover:border-primary/30 hover:shadow-[0_0_30px_color-mix(in_srgb,var(--primary)_15%,transparent)]",
         className,
       )}
       {...props}

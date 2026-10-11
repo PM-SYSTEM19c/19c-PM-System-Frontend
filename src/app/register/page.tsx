@@ -54,11 +54,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_50%_0%,rgba(108,92,231,0.15)_0%,transparent_60%)] px-5 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_srgb,var(--primary)_15%,transparent)_0%,transparent_60%)] px-5 py-10">
       <div className="w-full max-w-[440px] animate-fade-in">
         {/* Logo */}
         <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_40px_rgba(108,92,231,0.4)]">
+          <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_40px_color-mix(in_srgb,var(--primary)_40%,transparent)]">
             <ClipboardList className="size-7 text-white" />
           </div>
           <h1 className="mb-2 text-[28px] font-extrabold">Create Account</h1>

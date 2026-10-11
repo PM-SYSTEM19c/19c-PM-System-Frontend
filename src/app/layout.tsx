@@ -1,12 +1,32 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
 
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://nodewave-frontend-plum.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Project Management System",
-  description: "Internal Project Management & Client Visibility Platform",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "Project Management System | Deliverables & Client Visibility",
+    template: "%s | Project Management System",
+  },
+  description:
+    "Operational backbone for managing high-value project deliverables with state-based permissions and client visibility.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({
@@ -16,13 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
+      <body className={`${inter.className} ${inter.variable}`}>
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>
           <Toaster />
