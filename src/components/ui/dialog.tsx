@@ -36,7 +36,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/70 backdrop-blur-sm data-[state=open]:animate-overlay-in",
+        "fixed inset-0 z-50 bg-black/80 backdrop-blur-md data-[state=open]:animate-overlay-in",
         className,
       )}
       {...props}
@@ -58,7 +58,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-background-2 shadow-2xl shadow-black/50 outline-none data-[state=open]:animate-dialog-in",
+          "fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border/90 bg-background-2/95 backdrop-blur-xl shadow-2xl shadow-black/80 outline-none data-[state=open]:animate-dialog-in",
           className,
         )}
         {...props}
@@ -66,7 +66,7 @@ function DialogContent({
         {children}
         {showClose && (
           <DialogPrimitive.Close
-            className="absolute top-5 right-5 rounded-md p-1 text-muted-foreground opacity-70 transition hover:bg-card hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="absolute top-5 right-5 rounded-full p-1.5 text-muted-foreground opacity-70 transition hover:bg-card hover:text-primary hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
             aria-label="Close"
           >
             <XIcon className="size-4" />

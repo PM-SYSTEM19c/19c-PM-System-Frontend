@@ -16,10 +16,10 @@ export function Toaster() {
           type="button"
           onClick={() => dismiss(t.id)}
           className={cn(
-            "pointer-events-auto flex animate-fade-in items-center gap-2 rounded-xl border px-5 py-3.5 text-sm font-medium shadow-xl backdrop-blur-md",
+            "pointer-events-auto flex animate-fade-in items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-lg backdrop-blur-md transition-all",
             t.type === "success"
-              ? "border-success/30 bg-success/15 text-success"
-              : "border-destructive/30 bg-destructive/15 text-destructive",
+              ? "border-emerald-500/30 bg-card text-emerald-700 dark:text-emerald-400"
+              : "border-red-500/30 bg-card text-red-700 dark:text-red-400",
           )}
         >
           {t.type === "success" ? (

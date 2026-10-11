@@ -4,27 +4,26 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-br from-primary to-primary-2 text-primary-foreground shadow-sm hover:-translate-y-px hover:shadow-[0_4px_20px_color-mix(in_srgb,var(--primary)_40%,transparent)]",
+          "bg-primary text-primary-foreground font-bold hover:bg-primary-2 shadow-xs",
         secondary:
-          "border border-border bg-card text-foreground font-medium hover:border-primary hover:bg-card-hover",
+          "border border-border bg-card text-foreground hover:bg-secondary hover:text-foreground shadow-xs",
         outline:
-          "border border-border bg-transparent text-foreground font-medium hover:bg-card hover:border-primary/60",
+          "border border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground",
         destructive:
-          "border border-destructive/30 bg-destructive/15 text-destructive font-medium hover:bg-destructive/25",
-        ghost:
-          "text-muted-foreground font-medium hover:bg-card hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-destructive/25 bg-destructive/10 text-destructive hover:bg-destructive/20",
+        ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+        link: "text-foreground underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-5",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-11 px-6",
-        icon: "size-9",
+        default: "h-9 px-4.5 text-xs md:text-sm",
+        sm: "h-8 px-3.5 text-xs",
+        lg: "h-10 px-6 text-sm",
+        icon: "size-8 rounded-full",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

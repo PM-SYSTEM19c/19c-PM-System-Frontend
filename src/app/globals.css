@@ -1,42 +1,94 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
- * Design tokens (shadcn/ui naming) — dark premium theme.
- * Exposed to Tailwind CSS 4 via @theme inline, e.g. bg-card, text-muted-foreground,
- * border-border, bg-primary, text-status-done, etc.
+ * Grass.io Theme Tokens
+ * Clean, structured enterprise interface with restrained borders,
+ * genuine Grass light mode and dark mode palette.
  */
-:root {
+:root,
+.light {
+  color-scheme: light;
+  --background: #f7f9f2;
+  --background-2: #eef3e4;
+  --foreground: #141414;
+  --card: #ffffff;
+  --card-hover: #fbfdf9;
+  --card-foreground: #141414;
+  --popover: #ffffff;
+  --popover-foreground: #141414;
+  --primary: #a3e635;
+  --primary-2: #84cc16;
+  --primary-foreground: #0a0e05;
+  --secondary: #edf4e0;
+  --secondary-foreground: #18181b;
+  --muted: #f1f4eb;
+  --muted-foreground: #52525b;
+  --subtle: #71717a;
+  --accent: #e2f793;
+  --accent-foreground: #141414;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #0284c7;
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --ring: #a3e635;
+  --radius: 0.875rem;
+
+  /* Surface Hierarchy (Light) */
+  --surface-0: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f7f9f2;
+  --surface-3: #edf4e0;
+  --surface-4: #e2ecd0;
+}
+
+.dark {
   color-scheme: dark;
-  --background: #070607;
-  --background-2: #13141a;
-  --foreground: #eaeaff;
-  --card: #15151e;
-  --card-hover: #1e1e28;
-  --card-foreground: #eaeaff;
-  --popover: #15151e;
-  --popover-foreground: #eaeaff;
-  --primary: #50b1d2;
-  --primary-2: #094c86;
-  --primary-foreground: #070607;
-  --secondary: #1e1e28;
-  --secondary-foreground: #eaeaff;
-  --muted: #1e1e28;
-  --muted-foreground: #a3a0af;
-  --subtle: #7a7785;
-  --accent: #1e1e28;
-  --accent-foreground: #eaeaff;
-  --destructive: #ff5b5b;
-  --success: #25d366;
+  --background: #0f1216;
+  --background-2: #14181f;
+  --foreground: #f8fafc;
+  --card: #161b22;
+  --card-hover: #1c222b;
+  --card-foreground: #f8fafc;
+  --popover: #161b22;
+  --popover-foreground: #f8fafc;
+  --primary: #a3e635;
+  --primary-2: #bef264;
+  --primary-foreground: #0a0e05;
+  --secondary: #1a2029;
+  --secondary-foreground: #e2e8f0;
+  --muted: #161b22;
+  --muted-foreground: #8b98a9;
+  --subtle: #64748b;
+  --accent: #222d1e;
+  --accent-foreground: #a3e635;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
   --warning: #f59e0b;
-  --info: #50b1d2;
-  --border: #292938;
-  --input: #292938;
-  --ring: #50b1d2;
-  --radius: 0.75rem;
+  --info: #06b6d4;
+  --border: #232934;
+  --input: #14181f;
+  --ring: #a3e635;
+
+  /* Surface Hierarchy (Dark) */
+  --surface-0: #0b0e12;
+  --surface-1: #12161d;
+  --surface-2: #181d25;
+  --surface-3: #1f2530;
+  --surface-4: #272f3c;
 }
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
 
   --color-background: var(--background);
   --color-background-2: var(--background-2);
@@ -57,6 +109,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
@@ -64,53 +117,54 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Surface Layers */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+
   /* Task status colors */
   --color-status-todo: var(--info);
   --color-status-in_progress: var(--warning);
   --color-status-done: var(--success);
   --color-status-blocked: var(--destructive);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
 
-  --animate-fade-in: fade-in 0.3s ease forwards;
-  --animate-slide-in: slide-in 0.3s ease forwards;
-  --animate-shimmer: shimmer 1.5s infinite linear;
-  --animate-dialog-in: dialog-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in: fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-in: slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-dialog-in: dialog-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-overlay-in: fade-in 0.15s ease;
 
   @keyframes fade-in {
     from {
       opacity: 0;
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
+      transform: translateY(0);
     }
   }
   @keyframes slide-in {
     from {
       opacity: 0;
-      transform: translateX(-12px);
+      transform: translateX(-8px);
     }
     to {
       opacity: 1;
       transform: translateX(0);
     }
   }
-  @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
   @keyframes dialog-in {
     from {
       opacity: 0;
-      transform: translate(-50%, -48%) scale(0.96);
+      transform: translate(-50%, -48%) scale(0.97);
     }
     to {
       opacity: 1;
@@ -131,23 +185,23 @@
     cursor: pointer;
   }
   option {
-    background-color: var(--background-2);
+    background-color: var(--background);
     color: var(--foreground);
   }
 }
 
-/* Scrollbar */
+/* Subtle, clean scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--background-2);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: rgba(120, 120, 120, 0.2);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--subtle);
+  background: rgba(120, 120, 120, 0.35);
 }

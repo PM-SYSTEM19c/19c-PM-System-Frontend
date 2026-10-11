@@ -1,11 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Plus, Trash2, UserPlus, X } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Trash2,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { PageHeader } from "@/components/page";
+import { PageHeader, SectionHeader, StatCard } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -46,6 +55,18 @@ export default function DepartmentsPage() {
   const createDeptMutation = useCreateDepartment();
   const updateUserMutation = useUpdateUser();
   const deleteDeptMutation = useDeleteDepartment();
+
+  // Expanded departments state
+  const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set());
+
+  function toggleExpand(deptId: string) {
+    setExpandedDepts((prev) => {
+      const next = new Set(prev);
+      if (next.has(deptId)) next.delete(deptId);
+      else next.add(deptId);
+      return next;
+    });
+  }
 
   async function handleDeleteDept(dept: DepartmentWithUsers) {
     if (
@@ -136,101 +157,173 @@ export default function DepartmentsPage() {
 
   const creating = isSubmitting || createDeptMutation.isPending;
 
+  const totalMembers = departments.reduce(
+    (acc, d) => acc + (d.users?.length || 0),
+    0,
+  );
+  const activeDepts = departments.filter(
+    (d) => (d.users?.length || 0) > 0,
+  ).length;
+
   return (
     <>
-      <div className="animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <PageHeader
           title="Departments"
-          description={`${departments.length} department(s)`}
+          description="Cross-functional engineering and design team units"
           actions={
             <Button
               onClick={() => {
                 reset();
                 setShowCreate(true);
               }}
+              className="bg-primary text-primary-foreground font-bold shadow-xs hover:bg-primary-2"
             >
-              <Plus /> New Department
+              <Plus className="size-4" /> New Department
             </Button>
           }
         />
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] items-start gap-4">
-          {departments.map((dept) => (
-            <Card key={dept.id} interactive className="flex flex-col p-6">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <Building2 className="size-5 text-primary" /> {dept.name}
-                </h3>
-                <div className="flex items-center gap-1">
-                  <span className="rounded-lg bg-card px-2.5 py-1 font-mono text-[11px] font-semibold text-subtle">
-                    {dept.code}
-                  </span>
-                  <Button
-                    id={`delete-dept-${dept.id}`}
-                    size="icon"
-                    variant="ghost"
-                    className="size-8 hover:bg-destructive/10"
-                    onClick={() => handleDeleteDept(dept)}
-                    disabled={deleteDeptMutation.isPending}
-                    title="Delete department"
-                  >
-                    <Trash2 className="text-destructive" />
-                  </Button>
-                </div>
-              </div>
-              {dept.description && (
-                <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
-                  {dept.description}
-                </p>
-              )}
+        {/* Department Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <StatCard
+            label="Departments"
+            value={departments.length}
+            icon={Building2}
+            tone="primary"
+            subtext="Organizational functional units"
+          />
+          <StatCard
+            label="Total Headcount"
+            value={totalMembers}
+            icon={Users}
+            tone="info"
+            subtext="Assigned department personnel"
+          />
+          <StatCard
+            label="Staffed Units"
+            value={`${activeDepts} / ${departments.length}`}
+            icon={Building2}
+            tone="success"
+            subtext="Units with active members"
+          />
+        </div>
 
-              <div className="mt-auto border-t border-border pt-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[13px] font-semibold text-muted-foreground">
-                    Members ({dept.users?.length || 0})
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowAddMemberFor(dept.id)}
-                  >
-                    <UserPlus /> Add User
-                  </Button>
-                </div>
+        {/* Department List — Accordion style with Grass.io tokens */}
+        <div className="flex flex-col gap-3">
+          {departments.map((dept) => {
+            const isExpanded = expandedDepts.has(dept.id);
+            const memberCount = dept.users?.length || 0;
 
-                <div className="flex flex-col gap-2">
-                  {dept.users?.map((u) => (
-                    <div
-                      key={u.id}
-                      className="group flex items-center justify-between rounded-lg bg-card p-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                          {u.name[0]}
-                        </div>
-                        <div>
-                          <div className="text-[13px] font-medium">
-                            {u.name}
-                          </div>
-                          <div className="text-[11px] text-subtle">
-                            {u.position?.name || u.role}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeUserFromDept(u.id)}
-                        title="Remove User"
-                        className="rounded p-1 text-subtle opacity-60 transition group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="size-3.5" />
-                      </button>
+            return (
+              <Card key={dept.id} className="overflow-hidden">
+                {/* Department Header Row */}
+                <div className="flex items-center justify-between gap-4 px-5 py-4">
+                  <button
+                    type="button"
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                    onClick={() => toggleExpand(dept.id)}
+                  >
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                      <Building2 className="size-4" />
                     </div>
-                  ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[15px] font-bold text-foreground truncate">
+                          {dept.name}
+                        </span>
+                        <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 font-mono text-[10px] font-bold text-primary shrink-0">
+                          {dept.code}
+                        </span>
+                      </div>
+                      {dept.description && (
+                        <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+                          {dept.description}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[12px] font-medium text-muted-foreground">
+                      {memberCount} member{memberCount !== 1 ? "s" : ""}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 text-[11px]"
+                      onClick={() => setShowAddMemberFor(dept.id)}
+                    >
+                      <UserPlus className="size-3" /> Add
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                      onClick={() => handleDeleteDept(dept)}
+                      disabled={deleteDeptMutation.isPending}
+                      title="Delete department"
+                    >
+                      <Trash2 className="size-3.5 text-destructive/70" />
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(dept.id)}
+                      className="flex size-7 items-center justify-center rounded-full hover:bg-surface-3 text-muted-foreground transition-colors"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="size-4" />
+                      ) : (
+                        <ChevronDown className="size-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+
+                {/* Expanded Members List */}
+                {isExpanded && (
+                  <div className="border-t border-border/40 bg-surface-1/50 px-5 py-3">
+                    {memberCount === 0 ? (
+                      <div className="py-4 text-center text-[12px] text-muted-foreground">
+                        No members in this department yet
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {dept.users?.map((u) => (
+                          <div
+                            key={u.id}
+                            className="group flex items-center justify-between rounded-xl bg-surface-2/80 border border-border/30 px-3 py-2.5"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                                {u.name[0]}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[13px] font-medium text-foreground truncate">
+                                  {u.name}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground truncate">
+                                  {u.position?.name || u.role}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeUserFromDept(u.id)}
+                              title="Remove User"
+                              className="rounded-full p-1 text-subtle opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       </div>
 

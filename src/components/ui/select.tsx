@@ -24,7 +24,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background-2 px-4 text-sm text-foreground outline-none transition-all data-[placeholder]:text-subtle focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-input bg-background-2/90 px-4 text-sm text-foreground outline-none transition-all data-[placeholder]:text-subtle focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
@@ -49,13 +49,13 @@ function SelectContent({
         data-slot="select-content"
         position={position}
         className={cn(
-          "relative z-[60] max-h-72 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl data-[side=bottom]:translate-y-1",
+          "relative z-[60] max-h-72 min-w-[8rem] overflow-hidden rounded-2xl border border-border/90 bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl shadow-black/80 data-[side=bottom]:translate-y-1",
           position === "popper" && "w-[var(--radix-select-trigger-width)]",
           className,
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1">
+        <SelectPrimitive.Viewport className="p-1.5">
           {children}
         </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
@@ -72,7 +72,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center rounded-md py-2 pr-8 pl-3 text-sm outline-none select-none focus:bg-card-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default items-center rounded-xl py-2 pr-8 pl-3 text-sm font-medium outline-none select-none transition-colors focus:bg-primary/15 focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}
