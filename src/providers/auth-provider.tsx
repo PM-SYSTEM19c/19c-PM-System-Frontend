@@ -53,10 +53,13 @@ export function useAuth() {
     [router, setAuth],
   );
 
-  const logout = useCallback(() => {
-    api.logout();
-    clearAuth();
-    router.push("/login");
+  const logout = useCallback(async () => {
+    try {
+      await api.logout();
+    } finally {
+      clearAuth();
+      router.push("/login");
+    }
   }, [router, clearAuth]);
 
   return {

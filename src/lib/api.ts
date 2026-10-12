@@ -34,9 +34,15 @@ class ApiClient {
     return res.data;
   }
 
-  logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  async logout() {
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch (error) {
+      console.warn("Backend logout revocation failed or unreachable:", error);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
   }
 
   // Departments

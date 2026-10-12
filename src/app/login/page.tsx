@@ -19,28 +19,34 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const QUICK_LOGINS = [
-  {
-    label: "PM",
-    email: "pm@assessment.test",
-    dot: "bg-lime-500",
-  },
-  {
-    label: "UI/UX",
-    email: "uiux@assessment.test",
-    dot: "bg-pink-500",
-  },
-  {
-    label: "Frontend",
-    email: "frontend@assessment.test",
-    dot: "bg-cyan-500",
-  },
-  {
-    label: "Backend",
-    email: "backend@assessment.test",
-    dot: "bg-amber-500",
-  },
-];
+const isDemoEnabled =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
+
+const QUICK_LOGINS = isDemoEnabled
+  ? [
+      {
+        label: "PM",
+        email: "pm@assessment.test",
+        dot: "bg-lime-500",
+      },
+      {
+        label: "UI/UX",
+        email: "uiux@assessment.test",
+        dot: "bg-pink-500",
+      },
+      {
+        label: "Frontend",
+        email: "frontend@assessment.test",
+        dot: "bg-cyan-500",
+      },
+      {
+        label: "Backend",
+        email: "backend@assessment.test",
+        dot: "bg-amber-500",
+      },
+    ]
+  : [];
 
 const FEATURES = [
   {
@@ -87,6 +93,7 @@ export default function LoginPage() {
   };
 
   const quickLogin = (email: string) => {
+    if (!isDemoEnabled) return;
     setValue("email", email);
     setValue("password", "Password123!");
   };
@@ -240,35 +247,37 @@ export default function LoginPage() {
             </form>
           </Card>
 
-          {/* Quick Login Buttons */}
-          <div className="mt-4 rounded-2xl border border-border bg-card/60 p-4 shadow-xs">
-            <p className="mb-2.5 text-center text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
-              Quick Login Demo Accounts
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {QUICK_LOGINS.map((item) => (
-                <button
-                  key={item.email}
-                  type="button"
-                  onClick={() => quickLogin(item.email)}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground transition-all duration-150 hover:bg-secondary hover:border-zinc-400 dark:hover:border-zinc-600"
-                >
-                  <span
-                    className={`size-2 shrink-0 rounded-full ${item.dot}`}
-                  />
-                  <span>{item.label}</span>
-                </button>
-              ))}
+          {/* Quick Login Buttons — Only rendered when demo login is enabled */}
+          {isDemoEnabled && (
+            <div className="mt-4 rounded-2xl border border-border bg-card/60 p-4 shadow-xs">
+              <p className="mb-2.5 text-center text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                Quick Login Demo Accounts
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {QUICK_LOGINS.map((item) => (
+                  <button
+                    key={item.email}
+                    type="button"
+                    onClick={() => quickLogin(item.email)}
+                    className="flex items-center gap-2 rounded-xl border border-border bg-secondary/60 px-3 py-2 text-xs font-medium text-foreground transition-all duration-150 hover:bg-secondary hover:border-zinc-400 dark:hover:border-zinc-600"
+                  >
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${item.dot}`}
+                    />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => quickLogin("client@assessment.test")}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground"
+              >
+                <span className="size-2 shrink-0 rounded-full bg-cyan-500" />
+                Client Stakeholder
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => quickLogin("client@assessment.test")}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground"
-            >
-              <span className="size-2 shrink-0 rounded-full bg-cyan-500" />
-              Client Stakeholder
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
