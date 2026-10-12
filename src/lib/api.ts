@@ -1,4 +1,4 @@
-import type { ApiResponse, AuthData } from "@/types";
+import type { ApiResponse, AuthData, Role, UserStatus } from "@/types";
 import { axiosInstance } from "./axios";
 
 class ApiClient {
@@ -76,7 +76,12 @@ class ApiClient {
     return res.data;
   }
 
-  async updatePosition(id: string, data: any) {
+  async updatePosition(
+    id: string,
+    data:
+      | Partial<{ name: string; description?: string | null }>
+      | Record<string, unknown>,
+  ) {
     const res = await axiosInstance.patch(`/positions/${id}`, data);
     return res.data;
   }
@@ -108,7 +113,16 @@ class ApiClient {
     return res.data;
   }
 
-  async updateProject(id: string, data: any) {
+  async updateProject(
+    id: string,
+    data:
+      | Partial<{
+          name: string;
+          description?: string | null;
+          clientId?: string | null;
+        }>
+      | Record<string, unknown>,
+  ) {
     const res = await axiosInstance.patch(`/projects/${id}`, data);
     return res.data;
   }
@@ -143,12 +157,36 @@ class ApiClient {
     return res.data;
   }
 
-  async createTask(data: any) {
+  async createTask(
+    data:
+      | {
+          title: string;
+          description?: string | null;
+          projectId: string;
+          departmentId: string;
+          assigneeId?: string | null;
+          clientVisible?: boolean;
+        }
+      | Record<string, unknown>,
+  ) {
     const res = await axiosInstance.post("/tasks", data);
     return res.data;
   }
 
-  async updateTask(id: string, data: any) {
+  async updateTask(
+    id: string,
+    data:
+      | Partial<{
+          title: string;
+          description?: string | null;
+          departmentId?: string;
+          assigneeId?: string | null;
+          clientVisible?: boolean;
+          status?: string;
+          version?: number;
+        }>
+      | Record<string, unknown>,
+  ) {
     const res = await axiosInstance.patch(`/tasks/${id}`, data);
     return res.data;
   }
@@ -198,7 +236,18 @@ class ApiClient {
     return res.data;
   }
 
-  async addTaskAttachment(taskId: string, data: any) {
+  async addTaskAttachment(
+    taskId: string,
+    data:
+      | FormData
+      | {
+          fileName: string;
+          fileUrl: string;
+          mimeType?: string | null;
+          fileSize?: number | null;
+        }
+      | Record<string, unknown>,
+  ) {
     const isFormData = data instanceof FormData;
     const res = await axiosInstance.post(`/tasks/${taskId}/attachments`, data, {
       headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
@@ -228,7 +277,18 @@ class ApiClient {
     return res.data;
   }
 
-  async updateUser(userId: string, data: any) {
+  async updateUser(
+    userId: string,
+    data:
+      | Partial<{
+          name: string;
+          role: Role;
+          status: UserStatus;
+          departmentId: string | null;
+          positionId: string | null;
+        }>
+      | Record<string, unknown>,
+  ) {
     const res = await axiosInstance.patch(`/users/${userId}`, data);
     return res.data;
   }

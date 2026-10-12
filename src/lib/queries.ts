@@ -84,7 +84,8 @@ export function useCreateProject() {
 export function useUpdateProject(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => api.updateProject(id, data),
+    mutationFn: (data: Parameters<typeof api.updateProject>[1]) =>
+      api.updateProject(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.project(id) });
       qc.invalidateQueries({ queryKey: queryKeys.projects });
@@ -155,7 +156,8 @@ export function useTaskAttachments(id: string) {
 export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => api.createTask(data),
+    mutationFn: (data: Parameters<typeof api.createTask>[0]) =>
+      api.createTask(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }
@@ -204,7 +206,8 @@ export function useUpdateTask(id: string) {
     qc.invalidateQueries({ queryKey: ["tasks"] });
   };
   return useMutation({
-    mutationFn: (data: any) => api.updateTask(id, data),
+    mutationFn: (data: Parameters<typeof api.updateTask>[1]) =>
+      api.updateTask(id, data),
     onSuccess: refresh,
     onError: refresh,
   });
@@ -292,8 +295,13 @@ export function useCreatePosition() {
 export function useUpdatePosition() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.updatePosition(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof api.updatePosition>[1];
+    }) => api.updatePosition(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.positions }),
   });
 }
@@ -320,8 +328,13 @@ export function useUsers(params?: string) {
 export function useUpdateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.updateUser(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof api.updateUser>[1];
+    }) => api.updateUser(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
 }
