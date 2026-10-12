@@ -18,7 +18,7 @@ import {
   PageHeader,
   SectionHeader,
   StatCard,
-} from "@/components/page";
+} from "@/components/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Progress, Skeleton } from "@/components/ui/skeleton";

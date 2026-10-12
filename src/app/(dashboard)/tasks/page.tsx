@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { BlockedBy } from "@/components/blocked-by";
-import { PageHeader } from "@/components/page";
+import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
