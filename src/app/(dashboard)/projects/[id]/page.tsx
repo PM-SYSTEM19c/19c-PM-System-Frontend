@@ -26,7 +26,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BlockedBy } from "@/components/blocked-by";
-import { EmptyState } from "@/components/page";
+import { EmptyState } from "@/components/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

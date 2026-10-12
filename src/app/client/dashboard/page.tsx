@@ -11,7 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { PageHeader, StatCard } from "@/components/page";
+import { PageHeader, StatCard } from "@/components/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
