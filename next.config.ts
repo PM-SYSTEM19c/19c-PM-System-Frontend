@@ -15,6 +15,42 @@ const cspReportOnly = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  experimental: { proxyClientMaxBodySize: "11mb" },
+  async rewrites() {
+    const upstream =
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_BE_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === "production"
+        ? ""
+        : "http://localhost:3000/api/v1");
+    if (!upstream) return [];
+    const url = new URL(upstream);
+    if (
+      !/^https?:$/.test(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    )
+      throw new Error(
+        "BACKEND_API_URL must be a fixed HTTP(S) API base without credentials/query/hash",
+      );
+    const base = url.href.replace(/\/+$/, "");
+    // Native external rewrites bypass the Vercel Function payload limit.
+    return {
+      beforeFiles: [
+        {
+          source: "/api/v1/uploads/:path*",
+          destination: `${base}/uploads/:path*`,
+        },
+        {
+          source: "/api/v1/tasks/:id/attachments/:path*",
+          destination: `${base}/tasks/:id/attachments/:path*`,
+        },
+      ],
+    };
+  },
   async headers() {
     return [
       {
@@ -46,15 +82,6 @@ const nextConfig: NextConfig = {
             value: "on",
           },
         ],
-      },
-    ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination:
-          "https://nodewave-backend-production-96e8.up.railway.app/api/v1/:path*",
       },
     ];
   },

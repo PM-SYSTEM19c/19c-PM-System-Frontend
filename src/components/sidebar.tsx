@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
@@ -77,10 +76,17 @@ const NAV_GROUPS = [
   },
 ];
 
-export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
+export function Sidebar({
+  collapsed,
+  onCollapsedChange,
+  onNavClick,
+}: {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+  onNavClick?: () => void;
+}) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
 
   if (!user) return null;
 
@@ -91,13 +97,10 @@ export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
         ? "teal"
         : "secondary";
 
-  const sidebarWidth = collapsed ? "w-[72px]" : "w-[240px]";
-
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-border bg-card text-foreground transition-all duration-300 ease-out",
-        sidebarWidth,
+        "fixed top-0 left-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col border-r border-border bg-card text-foreground transition-[width] duration-300 ease-out motion-reduce:transition-none",
       )}
     >
       {/* Brand Header */}
@@ -172,10 +175,12 @@ export function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="px-3 py-1.5 border-t border-border">
+      <div className="hidden md:block px-3 py-1.5 border-t border-border">
         <button
           type="button"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => onCollapsedChange(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           className="flex w-full items-center justify-center rounded-lg py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

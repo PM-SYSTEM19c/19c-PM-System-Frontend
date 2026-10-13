@@ -2,12 +2,10 @@
 
 import {
   Briefcase,
-  Building2,
   Check,
   LayoutGrid,
   List,
   Pencil,
-  Search,
   ShieldCheck,
   UserCheck,
   Users as UsersIcon,

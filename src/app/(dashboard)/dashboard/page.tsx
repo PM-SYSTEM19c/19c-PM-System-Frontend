@@ -8,20 +8,14 @@ import {
   ClipboardList,
   FolderKanban,
   ListTodo,
-  PartyPopper,
   Target,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  EmptyState,
-  PageHeader,
-  SectionHeader,
-  StatCard,
-} from "@/components/page-header";
+import { EmptyState, SectionHeader, StatCard } from "@/components/page-header";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Progress, Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProjects, useTasks } from "@/lib/queries";
 import { useAuth } from "@/providers/auth-provider";
 import type { Project, Task, User } from "@/types";

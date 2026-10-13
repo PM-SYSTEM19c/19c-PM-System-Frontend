@@ -1,7 +1,7 @@
 "use client";
 import { Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { ThemeSelector } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -36,7 +37,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground transition-colors">
+    <div
+      className="flex flex-col md:flex-row min-h-screen bg-background text-foreground transition-colors"
+      style={
+        {
+          "--sidebar-width": isSidebarCollapsed ? "72px" : "240px",
+        } as CSSProperties
+      }
+    >
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-card p-4 border-b border-border sticky top-0 z-30">
         <div className="flex items-center gap-2.5">
@@ -51,7 +59,14 @@ export default function DashboardLayout({
           <ThemeSelector />
           <button
             type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => {
+              setIsSidebarCollapsed(false);
+              setIsMobileMenuOpen(!isMobileMenuOpen);
+            }}
+            aria-label={
+              isMobileMenuOpen ? "Close navigation" : "Open navigation"
+            }
+            aria-expanded={isMobileMenuOpen}
             className="rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
             {isMobileMenuOpen ? (
@@ -70,7 +85,11 @@ export default function DashboardLayout({
         <div
           className={`${isMobileMenuOpen ? "absolute left-0 top-0 h-full w-[240px] shadow-2xl md:shadow-none" : ""}`}
         >
-          <Sidebar onNavClick={closeMobileMenu} />
+          <Sidebar
+            collapsed={isSidebarCollapsed}
+            onCollapsedChange={setIsSidebarCollapsed}
+            onNavClick={closeMobileMenu}
+          />
         </div>
         {/* Overlay click to close */}
         {isMobileMenuOpen && (
@@ -84,7 +103,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main Content — uses sidebar-aware left margin */}
-      <main className="md:ml-[240px] flex-1 min-h-screen flex flex-col">
+      <main className="md:ml-[var(--sidebar-width)] flex-1 min-w-0 min-h-screen flex flex-col transition-[margin-left] duration-300 ease-out motion-reduce:transition-none">
         {/* Top Bar */}
         <header className="sticky top-0 z-20 hidden md:flex h-16 items-center justify-between border-b border-border bg-card/90 backdrop-blur-md px-8 transition-colors">
           <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">

@@ -1,26 +1,21 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/auth.store";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_BE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:3000/api/v1";
+import { getCsrfToken } from "./session-client";
 
 export const axiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: "/api/v1",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor: attach JWT token
-axiosInstance.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
+// Session cookies are sent by the browser, never read by JavaScript.
+axiosInstance.interceptors.request.use(async (config) => {
+  if (
+    !["get", "head", "options"].includes(config.method?.toLowerCase() ?? "get")
+  )
+    config.headers["X-CSRF-Token"] = await getCsrfToken();
   return config;
 });
 
@@ -28,9 +23,17 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+    if (
+      error.response?.status === 401 &&
+      error.config?.url !== "/auth/me" &&
+      typeof window !== "undefined"
+    ) {
       useAuthStore.getState().clearAuth();
-      if (!window.location.pathname.startsWith("/login")) {
+      if (
+        error.config?.url !== "/auth/me" &&
+        !window.location.pathname.startsWith("/login") &&
+        !window.location.pathname.startsWith("/register")
+      ) {
         window.location.href = "/login";
       }
     }

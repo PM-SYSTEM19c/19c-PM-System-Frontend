@@ -49,6 +49,7 @@ import { FieldError, Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
+import { getAttachmentProxyUrl } from "@/lib/attachment-url";
 import { axiosInstance } from "@/lib/axios";
 import {
   queryKeys,
@@ -113,17 +114,22 @@ function AttachmentImagePreview({
     let active = true;
     let objectUrl: string | null = null;
 
-    if (!fileUrl.includes("/api/v1/uploads/")) {
+    const proxyUrl = getAttachmentProxyUrl(
+      fileUrl,
+      process.env.NEXT_PUBLIC_BE_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:3000/api/v1",
+      window.location.origin,
+    );
+    if (!proxyUrl) {
       setBlobUrl(fileUrl);
       setLoading(false);
       return;
     }
 
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    fetch(fileUrl, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    fetch(proxyUrl, {
+      credentials: "same-origin",
+      redirect: "error",
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load image preview");
@@ -168,6 +174,7 @@ function AttachmentImagePreview({
   }
 
   return (
+    // biome-ignore lint/performance/noImgElement: Authenticated blob URLs are loaded locally and cannot be fetched by the Next image optimizer.
     <img
       src={blobUrl}
       alt={fileName}
@@ -229,16 +236,22 @@ export default function TaskDetailPage() {
   const [conflict, setConflict] = useState<PendingEdit | null>(null);
 
   async function handleOpenAttachment(fileUrl: string, fileName: string) {
-    if (!fileUrl.includes("/api/v1/uploads/")) {
+    const proxyUrl = getAttachmentProxyUrl(
+      fileUrl,
+      process.env.NEXT_PUBLIC_BE_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:3000/api/v1",
+      window.location.origin,
+    );
+    if (!proxyUrl) {
       window.open(fileUrl, "_blank", "noopener,noreferrer");
       return;
     }
 
     try {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch(fileUrl, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const res = await fetch(proxyUrl, {
+        credentials: "same-origin",
+        redirect: "error",
       });
 
       if (!res.ok) {

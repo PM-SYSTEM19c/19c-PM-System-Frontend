@@ -73,10 +73,6 @@ export default function RegisterPage() {
               <span className="text-lg font-bold tracking-tight text-foreground">
                 PM System
               </span>
-              <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                Network Node Active
-              </span>
             </div>
           </div>
 
@@ -126,11 +122,6 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-[11px] text-muted-foreground">
-          Enterprise Project Management System · Inspired by Grass.io
         </div>
       </div>
 

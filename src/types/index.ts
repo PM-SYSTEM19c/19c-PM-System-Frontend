@@ -49,7 +49,6 @@ export interface User {
 }
 
 export interface AuthData {
-  accessToken: string;
   user: User;
 }
 

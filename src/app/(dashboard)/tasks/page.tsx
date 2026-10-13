@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FolderKanban,
   Link2,
-  PartyPopper,
   Play,
   Search,
   User as UserIcon,

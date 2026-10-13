@@ -8,10 +8,6 @@ class ApiClient {
       email,
       password,
     });
-    if (res.data?.data?.accessToken) {
-      localStorage.setItem("token", res.data.data.accessToken);
-      localStorage.setItem("user", JSON.stringify(res.data.data.user));
-    }
     return res.data;
   }
 
@@ -39,9 +35,6 @@ class ApiClient {
       await axiosInstance.post("/auth/logout");
     } catch (error) {
       console.warn("Backend logout revocation failed or unreachable:", error);
-    } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
     }
   }
 
