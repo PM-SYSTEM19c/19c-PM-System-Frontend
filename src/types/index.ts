@@ -86,6 +86,8 @@ export interface Task {
   effectiveStatus: EffectiveStatus;
   departmentId: string;
   assigneeId: string | null;
+  startDate: string | null;
+  dueDate: string | null;
   clientVisible: boolean;
   version: number;
   createdAt: string;
@@ -127,6 +129,8 @@ export type EditableTaskField =
   | "description"
   | "departmentId"
   | "assigneeId"
+  | "startDate"
+  | "dueDate"
   | "clientVisible";
 
 /** `error.details` of a 409 VERSION_CONFLICT response */
@@ -141,6 +145,8 @@ export interface VersionConflictDetails {
     | "status"
     | "departmentId"
     | "assigneeId"
+    | "startDate"
+    | "dueDate"
     | "clientVisible"
     | "version"
     | "updatedAt"
