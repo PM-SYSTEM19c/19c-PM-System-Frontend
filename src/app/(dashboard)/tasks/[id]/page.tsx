@@ -69,22 +69,24 @@ import { useAuth } from "@/providers/auth-provider";
 import { toast } from "@/store/toast.store";
 import type { EditableTaskField, User, VersionConflictDetails } from "@/types";
 
-const editTaskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  departmentId: z.string().optional(),
-  assigneeId: z.string().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  clientVisible: z.boolean(),
-}).refine(
-  (data) =>
-    !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
-  {
-    message: "Due date must be on or after the start date",
-    path: ["dueDate"],
-  },
-);
+const editTaskSchema = z
+  .object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    departmentId: z.string().optional(),
+    assigneeId: z.string().optional(),
+    startDate: z.string().optional(),
+    dueDate: z.string().optional(),
+    clientVisible: z.boolean(),
+  })
+  .refine(
+    (data) =>
+      !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
+    {
+      message: "Due date must be on or after the start date",
+      path: ["dueDate"],
+    },
+  );
 type EditTaskFormData = z.infer<typeof editTaskSchema>;
 
 const ATTACHMENT_TYPES = [
@@ -403,9 +405,9 @@ export default function TaskDetailPage() {
       description: task.description || "",
       departmentId: task.departmentId,
       assigneeId: task.assigneeId || "",
-          startDate: task.startDate?.slice(0, 10) || "",
-          dueDate: task.dueDate?.slice(0, 10) || "",
-          clientVisible: task.clientVisible,
+      startDate: task.startDate?.slice(0, 10) || "",
+      dueDate: task.dueDate?.slice(0, 10) || "",
+      clientVisible: task.clientVisible,
     });
     setBaseline({
       title: task.title,

@@ -441,7 +441,10 @@ export function GanttChart({ tasks }: GanttChartProps) {
         <div className="flex flex-wrap items-center gap-2.5">
           {Object.entries(STATUS_COLORS).map(([status, colors]) => (
             <div key={status} className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full" style={{ backgroundColor: colors.bar }} />
+              <span
+                className="size-2 rounded-full"
+                style={{ backgroundColor: colors.bar }}
+              />
               <span className="text-[11px] font-medium text-muted-foreground">
                 {STATUS_LABELS[status] ?? status.replace("_", " ")}
               </span>
@@ -663,8 +666,7 @@ export function GanttChart({ tasks }: GanttChartProps) {
                             : colors.bar,
                         opacity: row.status === "DONE" ? 0.7 : 1,
                       }}
-                    >
-                    </div>
+                    ></div>
                   </div>
                 );
               })}
@@ -779,7 +781,6 @@ export function GanttChart({ tasks }: GanttChartProps) {
           )}
         </div>
       )}
-
     </div>
   );
 }

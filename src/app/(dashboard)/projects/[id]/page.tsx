@@ -108,22 +108,24 @@ const editProjectSchema = z.object({
 });
 type EditProjectFormData = z.infer<typeof editProjectSchema>;
 
-const createTaskSchema = z.object({
-  title: z.string().min(1, "Task title is required"),
-  description: z.string().optional(),
-  departmentId: z.string().optional(),
-  assigneeId: z.string().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  clientVisible: z.boolean(),
-}).refine(
-  (data) =>
-    !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
-  {
-    message: "Due date must be on or after the start date",
-    path: ["dueDate"],
-  },
-);
+const createTaskSchema = z
+  .object({
+    title: z.string().min(1, "Task title is required"),
+    description: z.string().optional(),
+    departmentId: z.string().optional(),
+    assigneeId: z.string().optional(),
+    startDate: z.string().optional(),
+    dueDate: z.string().optional(),
+    clientVisible: z.boolean(),
+  })
+  .refine(
+    (data) =>
+      !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
+    {
+      message: "Due date must be on or after the start date",
+      path: ["dueDate"],
+    },
+  );
 type CreateTaskFormData = z.infer<typeof createTaskSchema>;
 
 export default function ProjectDetailPage() {
