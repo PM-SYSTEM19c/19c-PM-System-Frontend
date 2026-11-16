@@ -158,6 +158,8 @@ class ApiClient {
           projectId: string;
           departmentId: string;
           assigneeId?: string | null;
+          startDate?: string | null;
+          dueDate?: string | null;
           clientVisible?: boolean;
         }
       | Record<string, unknown>,
@@ -174,6 +176,8 @@ class ApiClient {
           description?: string | null;
           departmentId?: string;
           assigneeId?: string | null;
+          startDate?: string | null;
+          dueDate?: string | null;
           clientVisible?: boolean;
           status?: string;
           version?: number;

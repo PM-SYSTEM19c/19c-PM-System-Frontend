@@ -74,8 +74,17 @@ const editTaskSchema = z.object({
   description: z.string().optional(),
   departmentId: z.string().optional(),
   assigneeId: z.string().optional(),
+  startDate: z.string().optional(),
+  dueDate: z.string().optional(),
   clientVisible: z.boolean(),
-});
+}).refine(
+  (data) =>
+    !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
+  {
+    message: "Due date must be on or after the start date",
+    path: ["dueDate"],
+  },
+);
 type EditTaskFormData = z.infer<typeof editTaskSchema>;
 
 const ATTACHMENT_TYPES = [
@@ -89,6 +98,8 @@ const FIELD_LABELS: Record<EditableTaskField | "status", string> = {
   description: "Description",
   departmentId: "Department",
   assigneeId: "Assignee",
+  startDate: "Start date",
+  dueDate: "Due date",
   clientVisible: "Client Visible",
   status: "Status",
 };
@@ -392,13 +403,17 @@ export default function TaskDetailPage() {
       description: task.description || "",
       departmentId: task.departmentId,
       assigneeId: task.assigneeId || "",
-      clientVisible: task.clientVisible,
+          startDate: task.startDate?.slice(0, 10) || "",
+          dueDate: task.dueDate?.slice(0, 10) || "",
+          clientVisible: task.clientVisible,
     });
     setBaseline({
       title: task.title,
       description: task.description,
       departmentId: task.departmentId,
       assigneeId: task.assigneeId,
+      startDate: task.startDate,
+      dueDate: task.dueDate,
       clientVisible: task.clientVisible,
     });
     setBaseVersion(task.version);
@@ -434,6 +449,8 @@ export default function TaskDetailPage() {
       description: data.description || null,
       departmentId: data.departmentId,
       assigneeId: data.assigneeId || null,
+      startDate: data.startDate || null,
+      dueDate: data.dueDate || null,
       clientVisible: data.clientVisible,
       // Version + baseline from when editing STARTED (not the refetched task),
       // so the server can detect and safely merge concurrent changes.
@@ -466,6 +483,8 @@ export default function TaskDetailPage() {
         description: cur.description,
         departmentId: cur.departmentId,
         assigneeId: cur.assigneeId,
+        startDate: cur.startDate,
+        dueDate: cur.dueDate,
         clientVisible: cur.clientVisible,
       },
     });
@@ -1104,6 +1123,28 @@ export default function TaskDetailPage() {
                       </option>
                     ))}
                   </NativeSelect>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label className="text-[11px]">Start date</Label>
+                    <Input
+                      type="date"
+                      className="h-10 text-[13px]"
+                      {...editForm.register("startDate")}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px]">Due date</Label>
+                    <Input
+                      type="date"
+                      className="h-10 text-[13px]"
+                      aria-invalid={!!editForm.formState.errors.dueDate}
+                      {...editForm.register("dueDate")}
+                    />
+                    <FieldError
+                      message={editForm.formState.errors.dueDate?.message}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="edit-client-visible" className="mb-0 text-xs">

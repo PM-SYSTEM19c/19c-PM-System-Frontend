@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Ban,
+  BarChart2,
   Building2,
   CheckCircle2,
   Columns3,
@@ -26,6 +27,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BlockedBy } from "@/components/blocked-by";
+import { GanttChart } from "@/components/gantt-chart";
 import { EmptyState } from "@/components/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -111,8 +113,17 @@ const createTaskSchema = z.object({
   description: z.string().optional(),
   departmentId: z.string().optional(),
   assigneeId: z.string().optional(),
+  startDate: z.string().optional(),
+  dueDate: z.string().optional(),
   clientVisible: z.boolean(),
-});
+}).refine(
+  (data) =>
+    !data.startDate || !data.dueDate || data.dueDate >= data.startDate,
+  {
+    message: "Due date must be on or after the start date",
+    path: ["dueDate"],
+  },
+);
 type CreateTaskFormData = z.infer<typeof createTaskSchema>;
 
 export default function ProjectDetailPage() {
@@ -229,6 +240,8 @@ export default function ProjectDetailPage() {
       description: "",
       departmentId: "",
       assigneeId: "",
+      startDate: "",
+      dueDate: "",
       clientVisible: true,
     });
     setShowCreateTask(true);
@@ -242,6 +255,8 @@ export default function ProjectDetailPage() {
         description: data.description || null,
         departmentId: data.departmentId || undefined,
         assigneeId: data.assigneeId || undefined,
+        startDate: data.startDate || null,
+        dueDate: data.dueDate || null,
         clientVisible: data.clientVisible,
       });
       setShowCreateTask(false);
@@ -710,6 +725,34 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
+              <div className="rounded-xl border border-border bg-background/60 p-4">
+                <div className="mb-3 text-xs font-semibold tracking-wider text-subtle uppercase">
+                  Schedule
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="task-start-date">Start date</Label>
+                    <Input
+                      id="task-start-date"
+                      type="date"
+                      {...taskForm.register("startDate")}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="task-due-date">Due date</Label>
+                    <Input
+                      id="task-due-date"
+                      type="date"
+                      aria-invalid={!!taskForm.formState.errors.dueDate}
+                      {...taskForm.register("dueDate")}
+                    />
+                    <FieldError
+                      message={taskForm.formState.errors.dueDate?.message}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-start justify-between gap-4 rounded-xl border border-border bg-background/60 p-4">
                 <div>
                   <Label
@@ -984,6 +1027,18 @@ export default function ProjectDetailPage() {
             ))}
           </div>
         )}
+      </Card>
+
+      {/* Gantt Chart */}
+      <Card className="p-6">
+        <div className="mb-5 flex items-center gap-2">
+          <BarChart2 className="size-4 text-primary" />
+          <h3 className="text-base font-bold">Gantt Chart</h3>
+          <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[10px] font-mono text-subtle">
+            {tasks.length} tasks
+          </span>
+        </div>
+        <GanttChart tasks={tasks} />
       </Card>
 
       {/* Project Audit Logs */}
